@@ -1,0 +1,20 @@
+{
+  "rider": "RD-263.7307.355",
+  "plugin": "cn.leekbox.quotes",
+  "checkedAt": "2026-11-26T06:47:51.342820900Z",
+  "before": {
+    "version": "1.0.1",
+    "warningVisible": true,
+    "missingSource": true
+  },
+  "after": {
+    "version": "1.0.1",
+    "warningVisible": false,
+    "missingSource": false
+  },
+  "update": {
+    "source": "file:///J:/Tools/Leek/rider-plugin/dist/updatePlugins.xml",
+    "version": "1.0.2",
+    "matchesDistribution": true
+  }
+}

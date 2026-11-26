@@ -1,0 +1,171 @@
+{
+  "archive": "dist/leekbox-rider-1.0.4.zip",
+  "sha256": "95a845f188a868e9bce1a6d97a83081517f788a44eedeab9db9dba7c367a7b77",
+  "rider": "RD-263.7307.355",
+  "pluginVerifier": "Compatible",
+  "unitTests": {
+    "tests": 38,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "previousLayout": {
+    "version": "1.0.3",
+    "measuredAt": "2026-11-26T07:23:46.953778100Z",
+    "headers": [
+      "STOCK",
+      "FUND",
+      "DOMESTIC",
+      "OVERSEAS"
+    ],
+    "rows": {
+      "sh000001": {
+        "depth": 3,
+        "headerX": 46.0,
+        "markerX": 70.0,
+        "rendererPadding": 5
+      },
+      "hk00700": {
+        "depth": 3,
+        "headerX": 46.0,
+        "markerX": 70.0,
+        "rendererPadding": 5
+      },
+      "nf_AO2702": {
+        "depth": 2,
+        "headerX": 27.0,
+        "markerX": 51.0,
+        "rendererPadding": 5
+      }
+    },
+    "dragEnabled": false
+  },
+  "currentLayout": {
+    "version": "1.0.4",
+    "measuredAt": "2026-11-26T07:33:11.038415100Z",
+    "headers": [
+      "MAINLAND",
+      "HONG_KONG",
+      "FUND",
+      "DOMESTIC",
+      "OVERSEAS"
+    ],
+    "rows": {
+      "sh000001": {
+        "depth": 2,
+        "headerX": 27.0,
+        "markerX": 27.0,
+        "rendererPadding": 0
+      },
+      "hk00700": {
+        "depth": 2,
+        "headerX": 27.0,
+        "markerX": 27.0,
+        "rendererPadding": 0
+      },
+      "nf_AO2702": {
+        "depth": 2,
+        "headerX": 27.0,
+        "markerX": 27.0,
+        "rendererPadding": 0
+      }
+    },
+    "dragEnabled": true
+  },
+  "dragAndRefresh": {
+    "verifiedAt": "2026-11-26T07:33:11.038415100Z",
+    "groups": [
+      "DOMESTIC",
+      "MAINLAND",
+      "HONG_KONG",
+      "OVERSEAS",
+      "FUND"
+    ],
+    "items": {
+      "DOMESTIC": [
+        "nf_FG2705",
+        "nf_AO2702"
+      ],
+      "MAINLAND": [
+        "sh000001",
+        "sz002384"
+      ],
+      "HONG_KONG": [
+        "hk00700"
+      ],
+      "OVERSEAS": [],
+      "FUND": []
+    },
+    "pinned": "sh000001"
+  },
+  "restart": {
+    "verifiedAt": "2026-11-26T07:34:19.505775100Z",
+    "groups": [
+      "DOMESTIC",
+      "MAINLAND",
+      "HONG_KONG",
+      "OVERSEAS",
+      "FUND"
+    ],
+    "items": {
+      "DOMESTIC": [
+        "nf_FG2705",
+        "nf_AO2702"
+      ],
+      "MAINLAND": [
+        "sh000001",
+        "sz002384"
+      ],
+      "HONG_KONG": [
+        "hk00700"
+      ],
+      "OVERSEAS": [],
+      "FUND": []
+    },
+    "pinned": "sh000001"
+  },
+  "appearance": {
+    "verifiedAt": "2026-11-26T07:35:25.586034500Z",
+    "group": {
+      "rows": 9,
+      "treeHasFocus": true,
+      "surface": "#191a1c",
+      "mismatches": {},
+      "wrongEmphasis": []
+    },
+    "venue": {
+      "rows": 11,
+      "treeHasFocus": true,
+      "surface": "#191a1c",
+      "mismatches": {},
+      "wrongEmphasis": []
+    },
+    "quote-and-hover": {
+      "rows": 11,
+      "treeHasFocus": true,
+      "surface": "#191a1c",
+      "mismatches": {},
+      "wrongEmphasis": []
+    },
+    "idle": {
+      "rows": 11,
+      "treeHasFocus": true,
+      "surface": "#191a1c",
+      "mismatches": {},
+      "wrongEmphasis": []
+    }
+  },
+  "repositoryUpdate": {
+    "verifiedAt": "2026-11-26T07:36:30.963811200Z",
+    "fromVersion": "1.0.3",
+    "toVersion": "1.0.4",
+    "downloadedZipMatched": true
+  },
+  "screenshot": "watch-order.png",
+  "screenshotCrop": [
+    0,
+    0,
+    450,
+    242
+  ]
+}

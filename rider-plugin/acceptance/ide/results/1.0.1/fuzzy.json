@@ -1,0 +1,162 @@
+{
+  "phase": "fuzzy",
+  "started": "2026-11-26T05:41:41.562696700Z",
+  "pid": 31344,
+  "build": "RD-263.7307.355",
+  "checks": {
+    "upgraded": {
+      "symbols": [
+        "sh600000",
+        "hk00700",
+        "000001",
+        "161725",
+        "nf_IF0",
+        "nf_RB0",
+        "nf_RB2701",
+        "hf_OIL",
+        "hf_CHA50CFD"
+      ],
+      "pinned": "nf_RB2701",
+      "previousVersion": "1.0.0"
+    },
+    "oxide": {
+      "byCode": [
+        "nf_AO0",
+        "nf_AO2612",
+        "nf_AO2701",
+        "nf_AO2702",
+        "nf_AO2703",
+        "nf_AO2704",
+        "nf_AO2705",
+        "nf_AO2706",
+        "nf_AO2707",
+        "nf_AO2708",
+        "nf_AO2709",
+        "nf_AO2710",
+        "nf_AO2711",
+        "161725"
+      ],
+      "byName": [
+        "nf_AO0",
+        "nf_AO2612",
+        "nf_AO2701",
+        "nf_AO2702",
+        "nf_AO2703",
+        "nf_AO2704",
+        "nf_AO2705",
+        "nf_AO2706",
+        "nf_AO2707",
+        "nf_AO2708",
+        "nf_AO2709",
+        "nf_AO2710",
+        "nf_AO2711"
+      ],
+      "details": {
+        "text": "–  0.00%  2558  氧化铝2702  nf_AO2702  ·  13:41:47",
+        "height": 22,
+        "tooltip": "\u003chtml\u003e氧化铝2702  nf_AO2702\u003cbr\u003e2558   0.00%\u003cbr\u003e报价时间  2026-11-26 13:41:47\u003cbr\u003e涨跌  0\u003cbr\u003e最高  2588     最低  2553\u003cbr\u003e今开  2556\u003cbr\u003e成交量  3.71万手     成交额  —\u003cbr\u003e涨跌口径  昨结算价  2558.000\u003c/html\u003e",
+        "source": "nf_AO2702  ·  报价时间  2026-11-26 13:41:47",
+        "stockGroups": 2
+      },
+      "rows": {
+        "nf_AO0": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:41:45.328474900Z",
+          "name": "氧化铝连续",
+          "price": "2553.000",
+          "percent": "0.04",
+          "time": "2026-11-26 13:41:47",
+          "basis": "2552.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "2553.000",
+          "bid": false,
+          "day": {
+            "open": "2566.000",
+            "high": "2585.000",
+            "low": "2547.000",
+            "volume": "144188",
+            "turnover": null
+          }
+        },
+        "nf_AO2702": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:41:45.295585500Z",
+          "name": "氧化铝2702",
+          "price": "2558.000",
+          "percent": "0.00",
+          "time": "2026-11-26 13:41:47",
+          "basis": "2558.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "2558.000",
+          "bid": false,
+          "day": {
+            "open": "2556.000",
+            "high": "2588.000",
+            "low": "2553.000",
+            "volume": "37106",
+            "turnover": null
+          }
+        }
+      }
+    },
+    "numericChoice": [
+      "000001",
+      "sz000001"
+    ]
+  },
+  "plugin": {
+    "id": "cn.leekbox.quotes",
+    "version": "1.0.1",
+    "path": "C:\\Users\\XuJiang\\AppData\\Local\\LeekBox\\rider-263-release-100\\plugins\\leekbox-rider"
+  },
+  "ok": true,
+  "wire": [
+    {
+      "at": "2026-11-26T05:41:45.174185500Z",
+      "url": "https://hq.sinajs.cn/list\u003dnf_AO2702",
+      "file": "001.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T05:41:45.295585500Z",
+      "url": "https://hq.sinajs.cn/list\u003dnf_AO0",
+      "file": "002.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T05:41:46.202369200Z",
+      "url": "https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?m\u003d1\u0026key\u003d000001",
+      "file": "003.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T05:41:46.495931500Z",
+      "url": "https://hq.sinajs.cn/list\u003dsz000001",
+      "file": "004.raw",
+      "status": 200
+    }
+  ],
+  "requests": [
+    {
+      "at": "2026-11-26T05:41:45.174185500Z",
+      "url": "https://hq.sinajs.cn/list\u003dnf_AO2702",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T05:41:45.295585500Z",
+      "url": "https://hq.sinajs.cn/list\u003dnf_AO0",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T05:41:46.202369200Z",
+      "url": "https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?m\u003d1\u0026key\u003d000001",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T05:41:46.495931500Z",
+      "url": "https://hq.sinajs.cn/list\u003dsz000001",
+      "failedByTest": false
+    }
+  ],
+  "ended": "2026-11-26T05:41:46.653775500Z"
+}

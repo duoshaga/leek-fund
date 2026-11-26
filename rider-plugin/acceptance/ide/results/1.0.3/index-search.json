@@ -1,0 +1,61 @@
+{
+  "plugin": "cn.leekbox.quotes",
+  "version": "1.0.3",
+  "archive": "dist/leekbox-rider-1.0.3.zip",
+  "sha256": "18ee9224fbc859194714a7a91a1a2a7f0da4db65e51fd445163d0ccd9e5a72f5",
+  "rider": "RD-263.7307.355",
+  "pluginVerifier": "Compatible",
+  "unitTests": {
+    "tests": 36,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "indexSearch": {
+    "verifiedAt": "2026-11-26T07:09:17.141875800Z",
+    "checks": {
+      "sh000001": [
+        "sh000001"
+      ],
+      "quote": {
+        "state": "CURRENT",
+        "received": "2026-11-26T07:09:15.554306900Z",
+        "name": "上证指数",
+        "price": "3476.8816",
+        "percent": "0.01",
+        "time": "2026-11-26 15:09:12",
+        "basis": "3476.4697",
+        "basisLabel": "昨收",
+        "rawTrade": "3476.8816",
+        "bid": false,
+        "day": {
+          "open": "3490.1446",
+          "high": "3497.8092",
+          "low": "3455.0360",
+          "volume": "454062959",
+          "turnover": "613332810453"
+        }
+      },
+      "watchlistRow": "⌃  +0.01%  3476.8816  上证指数  sh000001  ·  15:09:12",
+      "深证成指": [
+        "sz399001"
+      ],
+      "sh000300": [
+        "sh000300"
+      ],
+      "000001": [
+        "sh000001",
+        "sz000001",
+        "000001"
+      ]
+    },
+    "quoteMatchedSource": true,
+    "screenshot": "index-search.png"
+  },
+  "repositoryUpdate": {
+    "verifiedAt": "2026-11-26T07:11:45.632215200Z",
+    "fromVersion": "1.0.2",
+    "toVersion": "1.0.3",
+    "downloadedZipMatched": true
+  }
+}

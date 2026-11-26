@@ -1,0 +1,13 @@
+{
+  "installMethod": "Rider installPlugins with a file:// repository descriptor and a file:// ZIP, Windows",
+  "pluginId": "cn.leekbox.quotes",
+  "product": "RD-263.7307.355",
+  "version": "1.0.1",
+  "archive": "leekbox-rider-1.0.1.zip",
+  "archiveBytes": 139105,
+  "archiveSha256": "39706ed671acf39a4a799affd7626c567e38f7d59e7688f5d2f9d830b726e67f",
+  "jar": "leekbox-rider/lib/leekbox-rider-1.0.1.jar",
+  "zipJarSha256": "77d7883f643dddd0bd0b5671293a2be84a03cfc85f8f31bbb6ea32d1c48978c2",
+  "installedJarSha256": "77d7883f643dddd0bd0b5671293a2be84a03cfc85f8f31bbb6ea32d1c48978c2",
+  "identicalBytes": true
+}

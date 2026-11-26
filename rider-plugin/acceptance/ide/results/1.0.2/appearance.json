@@ -1,0 +1,93 @@
+{
+  "archive": "dist/leekbox-rider-1.0.2.zip",
+  "sha256": "261eabc46586c0775f751e8d1ed4795e68014ff4ed68ad884d1ead0553afd2f9",
+  "plugin": "cn.leekbox.quotes",
+  "version": "1.0.2",
+  "rider": "RD-263.7307.355",
+  "pluginVerifier": "Compatible",
+  "unitTests": {
+    "tests": 34,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "darkGroupSelection": {
+    "sampleRectangle": [
+      0,
+      42,
+      455,
+      186
+    ],
+    "color": "#2e436e",
+    "pixelsIn1.0.1": 35175,
+    "pixelsIn1.0.2": 0
+  },
+  "themes": {
+    "ExperimentalDark": {
+      "checkedAt": "2026-11-26T06:36:30.517622100Z",
+      "states": {
+        "group": {
+          "rows": 6,
+          "treeHasFocus": true,
+          "surface": "#2b2d30",
+          "mismatches": {},
+          "wrongEmphasis": []
+        },
+        "venue": {
+          "rows": 8,
+          "treeHasFocus": true,
+          "surface": "#2b2d30",
+          "mismatches": {},
+          "wrongEmphasis": []
+        },
+        "quote-and-hover": {
+          "rows": 8,
+          "treeHasFocus": true,
+          "surface": "#2b2d30",
+          "mismatches": {},
+          "wrongEmphasis": []
+        },
+        "idle": {
+          "rows": 8,
+          "treeHasFocus": true,
+          "surface": "#2b2d30",
+          "mismatches": {},
+          "wrongEmphasis": []
+        }
+      }
+    },
+    "ExperimentalLight": {
+      "checkedAt": "2026-11-26T06:36:54.187195Z",
+      "states": {
+        "group": {
+          "rows": 6,
+          "treeHasFocus": true,
+          "surface": "#f7f8fa",
+          "mismatches": {},
+          "wrongEmphasis": []
+        },
+        "venue": {
+          "rows": 8,
+          "treeHasFocus": true,
+          "surface": "#f7f8fa",
+          "mismatches": {},
+          "wrongEmphasis": []
+        },
+        "quote-and-hover": {
+          "rows": 8,
+          "treeHasFocus": true,
+          "surface": "#f7f8fa",
+          "mismatches": {},
+          "wrongEmphasis": []
+        },
+        "idle": {
+          "rows": 8,
+          "treeHasFocus": true,
+          "surface": "#f7f8fa",
+          "mismatches": {},
+          "wrongEmphasis": []
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "checkedAt": "2026-11-26T04:45:22+00:00",
+  "archive": "dist/leekbox-rider-1.0.0.zip",
+  "archiveBytes": 91971,
+  "sha256": "152983347e126061ea780546f001946be4a2a0563b9ca74d6f7dcca4a3439136",
+  "gradleBuildSha256": "152983347e126061ea780546f001946be4a2a0563b9ca74d6f7dcca4a3439136",
+  "id": "cn.leekbox.quotes",
+  "version": "1.0.0",
+  "target": {
+    "ide": "JetBrains Rider",
+    "version": "2026.3.0.2",
+    "build": "RD-263.7307.355",
+    "runtime": "25.0.4.1 (JetBrains s.r.o. 25.0.4.1+1-b635.79)"
+  },
+  "build": {
+    "gradle": "9.9.2",
+    "kotlin": "2.4.21",
+    "intellijPlatformGradlePlugin": "2.20.1",
+    "command": "gradlew.bat test buildPlugin verifyPlugin",
+    "result": "BUILD SUCCESSFUL"
+  },
+  "verification": {
+    "pluginVerifier": "1.411",
+    "gradle": "Compatible",
+    "cliOffline": "Compatible"
+  },
+  "tests": {
+    "framework": "JUnit Jupiter 5.14.4",
+    "passed": 23,
+    "suites": [
+      {
+        "suite": "leek.ProviderTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "keep published unit NAV and only the provider supplied percentage()",
+          "read stock prices and original times from the respective feeds()",
+          "use index previous close and commodity previous settlement from the same batch()",
+          "show buy one for an out of spread trade or missing trade and retain its raw value()",
+          "an explicit empty carries no quote and one provider failure leaves other results available()",
+          "normalize codes without collapsing distinct futures contracts()",
+          "Tencent matches its records by code and recognizes the explicit no-match sentinel()",
+          "a protocol error keeps previous data eligible instead of masquerading as empty()"
+        ]
+      },
+      {
+        "suite": "leek.SessionTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "iceHolidayCloseOverridesRegularSourceHours()",
+          "disclosureCadenceAndUnverifiedContracts()",
+          "brentDstAndSundayOpeningUseUsEasternClock()",
+          "shfeNightTradingDaySurvivesMidnightAndWeekend()",
+          "brentYearEndFollowsTheOutrightContractInAppendixTwo()",
+          "hongKongCashSharesUseLocalLunchHalfDayAndHolidays()",
+          "mainlandAfterHoursUsesEffectiveDateAndBoard()",
+          "mainlandBreaksAndHolidayEves()",
+          "sourceA50ReopensAtSeventeenAndTradesOnMainlandHolidays()",
+          "manualOnlyReasonDistinguishesClosedFromMissingCalendar()"
+        ]
+      },
+      {
+        "suite": "leek.WatchBookTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "transportFailureRetainsPriceAndTimeAndSuccessfulEmptyClearsThem()",
+          "bidFallbackAndMissingPercentAreConsistentOnBothSurfaces()",
+          "exchangeClockReplayPollsOnlyGoldAfterRebarClosesAndKeepsItsTradingDay()",
+          "overlappingRequestsAndLateRemovalDoNotOverwriteReplacement()",
+          "watchlistCacheAndExactPinnedMonthSurviveReload()"
+        ]
+      }
+    ]
+  }
+}

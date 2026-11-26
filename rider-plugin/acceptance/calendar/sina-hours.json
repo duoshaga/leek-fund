@@ -1,0 +1,45 @@
+{
+  "retrieved": "2026-11-26T12:23:09.291817+08:00",
+  "symbols": [
+    {
+      "symbol": "hf_OIL",
+      "url": "https://stock.finance.sina.com.cn/futures/api/openapi.php/InterfaceInfoService.getMarket?category=hf&symbol=OIL",
+      "exchange": "(ICE)",
+      "timezone": "winter",
+      "time": [
+        [
+          "09:00",
+          "13:00"
+        ],
+        [
+          "13:00",
+          "23:59"
+        ],
+        [
+          "00:00",
+          "06:59"
+        ]
+      ]
+    },
+    {
+      "symbol": "hf_CHA50CFD",
+      "url": "https://stock.finance.sina.com.cn/futures/api/openapi.php/InterfaceInfoService.getMarket?category=hf&symbol=CHA50CFD",
+      "exchange": "(SGX)",
+      "timezone": "summer",
+      "time": [
+        [
+          "17:00",
+          "23:59"
+        ],
+        [
+          "00:00",
+          "05:15"
+        ],
+        [
+          "09:00",
+          "16:35"
+        ]
+      ]
+    }
+  ]
+}

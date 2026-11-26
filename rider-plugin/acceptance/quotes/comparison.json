@@ -1,0 +1,232 @@
+{
+  "description": "Independent calculation from captured live response bytes, compared with Kotlin decoding of the same bytes",
+  "checks": [
+    {
+      "code": "sh600000",
+      "matched": true
+    },
+    {
+      "code": "hk00700",
+      "matched": true
+    },
+    {
+      "code": "000001",
+      "matched": true
+    },
+    {
+      "code": "161725",
+      "matched": true
+    },
+    {
+      "code": "nf_IF0",
+      "matched": true
+    },
+    {
+      "code": "nf_RB0",
+      "matched": true
+    },
+    {
+      "code": "nf_RB2701",
+      "matched": true
+    },
+    {
+      "code": "hf_OIL",
+      "matched": true
+    },
+    {
+      "code": "hf_CHA50CFD",
+      "matched": true
+    }
+  ],
+  "expected": [
+    {
+      "code": "sh600000",
+      "name": "浦发银行",
+      "price": "10.640",
+      "percent": "-0.28",
+      "sourceTime": "2026-11-26 11:30:00",
+      "basisLabel": "昨收",
+      "basis": "10.670",
+      "rawTrade": "10.640",
+      "bidFallback": "false"
+    },
+    {
+      "code": "hk00700",
+      "name": "腾讯控股",
+      "price": "344.000",
+      "percent": "1.96",
+      "sourceTime": "2026/11/26 11:59:59",
+      "basisLabel": "昨收",
+      "basis": "337.400",
+      "rawTrade": "344.000",
+      "bidFallback": "false"
+    },
+    {
+      "code": "000001",
+      "name": "华夏成长混合",
+      "price": "0.9110",
+      "percent": "-5.89",
+      "sourceTime": "2026-11-25",
+      "basisLabel": "披露日涨跌幅",
+      "basis": "",
+      "rawTrade": "",
+      "bidFallback": "false"
+    },
+    {
+      "code": "161725",
+      "name": "招商中证白酒指数(LOF)A",
+      "price": "0.5721",
+      "percent": "0.85",
+      "sourceTime": "2026-11-25",
+      "basisLabel": "披露日涨跌幅",
+      "basis": "",
+      "rawTrade": "",
+      "bidFallback": "false"
+    },
+    {
+      "code": "nf_IF0",
+      "name": "沪深300指数期货连续",
+      "price": "3855.800",
+      "percent": "0.83",
+      "sourceTime": "2026-11-26 11:30:00",
+      "basisLabel": "昨收",
+      "basis": "3824.000",
+      "rawTrade": "3855.800",
+      "bidFallback": "false"
+    },
+    {
+      "code": "nf_RB0",
+      "name": "螺纹钢连续",
+      "price": "3065.000",
+      "percent": "0.59",
+      "sourceTime": "2026-11-26 11:30:00",
+      "basisLabel": "昨结算价",
+      "basis": "3047.000",
+      "rawTrade": "3065.000",
+      "bidFallback": "false"
+    },
+    {
+      "code": "nf_RB2701",
+      "name": "螺纹钢2701",
+      "price": "3065.000",
+      "percent": "0.59",
+      "sourceTime": "2026-11-26 11:30:00",
+      "basisLabel": "昨结算价",
+      "basis": "3047.000",
+      "rawTrade": "3065.000",
+      "bidFallback": "false"
+    },
+    {
+      "code": "hf_OIL",
+      "name": "布伦特原油",
+      "price": "91.094",
+      "percent": "0.50",
+      "sourceTime": "2026-11-26 12:20:56",
+      "basisLabel": "昨结算价",
+      "basis": "90.640",
+      "rawTrade": "91.094",
+      "bidFallback": "false"
+    },
+    {
+      "code": "hf_CHA50CFD",
+      "name": "富时中国A50期货",
+      "price": "12524.000",
+      "percent": "0.55",
+      "sourceTime": "2026-11-26 12:21:38",
+      "basisLabel": "昨结算价",
+      "basis": "12455.000",
+      "rawTrade": "12530.130",
+      "bidFallback": "true"
+    }
+  ],
+  "initialOverseasBidAsk": [
+    {
+      "code": "hf_OIL",
+      "name": "布伦特原油",
+      "price": "91.094",
+      "percent": "0.50",
+      "sourceTime": "2026-11-26 12:20:56",
+      "basisLabel": "昨结算价",
+      "basis": "90.640",
+      "rawTrade": "91.094",
+      "bidFallback": "false",
+      "bid": "91.080",
+      "ask": "91.100"
+    },
+    {
+      "code": "hf_CHA50CFD",
+      "name": "富时中国A50期货",
+      "price": "12524.000",
+      "percent": "0.55",
+      "sourceTime": "2026-11-26 12:21:38",
+      "basisLabel": "昨结算价",
+      "basis": "12455.000",
+      "rawTrade": "12530.130",
+      "bidFallback": "true",
+      "bid": "12524.000",
+      "ask": "12525.000"
+    }
+  ],
+  "liveSourceCycleStartTimes": [
+    "2026-11-26T12:22:09.7479519+08:00 cycle 1",
+    "2026-11-26T12:22:36.2271591+08:00 cycle 2"
+  ],
+  "liveSourceCycles": [
+    [
+      {
+        "code": "hf_OIL",
+        "name": "布伦特原油",
+        "price": "91.090",
+        "percent": "0.50",
+        "sourceTime": "2026-11-26 12:21:58",
+        "basisLabel": "昨结算价",
+        "basis": "90.640",
+        "rawTrade": "91.111",
+        "bidFallback": "true",
+        "bid": "91.090",
+        "ask": "91.100"
+      },
+      {
+        "code": "hf_CHA50CFD",
+        "name": "富时中国A50期货",
+        "price": "12525.000",
+        "percent": "0.56",
+        "sourceTime": "2026-11-26 12:22:12",
+        "basisLabel": "昨结算价",
+        "basis": "12455.000",
+        "rawTrade": "12529.560",
+        "bidFallback": "true",
+        "bid": "12525.000",
+        "ask": "12526.000"
+      }
+    ],
+    [
+      {
+        "code": "hf_OIL",
+        "name": "布伦特原油",
+        "price": "91.080",
+        "percent": "0.49",
+        "sourceTime": "2026-11-26 12:22:15",
+        "basisLabel": "昨结算价",
+        "basis": "90.640",
+        "rawTrade": "91.102",
+        "bidFallback": "true",
+        "bid": "91.080",
+        "ask": "91.090"
+      },
+      {
+        "code": "hf_CHA50CFD",
+        "name": "富时中国A50期货",
+        "price": "12525.000",
+        "percent": "0.56",
+        "sourceTime": "2026-11-26 12:22:37",
+        "basisLabel": "昨结算价",
+        "basis": "12455.000",
+        "rawTrade": "12531.600",
+        "bidFallback": "true",
+        "bid": "12525.000",
+        "ask": "12527.000"
+      }
+    ]
+  ]
+}

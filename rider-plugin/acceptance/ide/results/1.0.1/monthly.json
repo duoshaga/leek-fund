@@ -1,0 +1,88 @@
+{
+  "phase": "monthly",
+  "started": "2026-11-26T05:52:19.260137Z",
+  "pid": 18392,
+  "build": "RD-263.7307.355",
+  "checks": {
+    "hiddenBefore": {
+      "model": {
+        "state": "CURRENT",
+        "received": "2026-11-26T05:52:12.206906200Z",
+        "name": "螺纹钢2701",
+        "price": "3061.000",
+        "percent": "0.46",
+        "time": "2026-11-26 13:52:13",
+        "basis": "3047.000",
+        "basisLabel": "昨结算价",
+        "rawTrade": "3061.000",
+        "bid": false,
+        "day": {
+          "open": "3065.000",
+          "high": "3071.000",
+          "low": "3051.000",
+          "volume": "515882",
+          "turnover": null
+        }
+      },
+      "text": "nf_RB2701   3061   +0.46%"
+    },
+    "hiddenUpdates": [
+      {
+        "model": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:52:37.369580800Z",
+          "name": "螺纹钢2701",
+          "price": "3062.000",
+          "percent": "0.49",
+          "time": "2026-11-26 13:52:39",
+          "basis": "3047.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "3062.000",
+          "bid": false,
+          "day": {
+            "open": "3065.000",
+            "high": "3071.000",
+            "low": "3051.000",
+            "volume": "516206",
+            "turnover": null
+          }
+        },
+        "text": "nf_RB2701   3062   +0.49%",
+        "sidebarVisible": false
+      }
+    ]
+  },
+  "plugin": {
+    "id": "cn.leekbox.quotes",
+    "version": "1.0.1",
+    "path": "C:\\Users\\XuJiang\\AppData\\Local\\LeekBox\\rider-263-release-101\\plugins\\leekbox-rider"
+  },
+  "ok": true,
+  "wire": [
+    {
+      "at": "2026-11-26T05:52:37.239925700Z",
+      "url": "https://qt.gtimg.cn/q\u003d?q\u003dr_hk00700\u0026fmt\u003djson",
+      "file": "001.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T05:52:37.239925700Z",
+      "url": "https://hq.sinajs.cn/list\u003dsh600000,nf_IF0,nf_RB0,nf_RB2701,hf_OIL,hf_CHA50CFD",
+      "file": "002.raw",
+      "status": 200
+    }
+  ],
+  "requests": [
+    {
+      "at": "2026-11-26T05:52:37.239925700Z",
+      "url": "https://hq.sinajs.cn/list\u003dsh600000,nf_IF0,nf_RB0,nf_RB2701,hf_OIL,hf_CHA50CFD",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T05:52:37.239925700Z",
+      "url": "https://qt.gtimg.cn/q\u003d?q\u003dr_hk00700\u0026fmt\u003djson",
+      "failedByTest": false
+    }
+  ],
+  "ended": "2026-11-26T05:52:37.572400100Z"
+}

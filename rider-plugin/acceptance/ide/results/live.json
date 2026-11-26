@@ -1,0 +1,602 @@
+{
+  "phase": "live",
+  "started": "2026-11-26T04:45:07.003944300Z",
+  "pid": 69872,
+  "build": "RD-263.7307.355",
+  "checks": {
+    "nine": {
+      "model": {
+        "sh600000": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.877920200Z",
+          "name": "浦发银行",
+          "price": "10.640",
+          "percent": "-0.28",
+          "time": "2026-11-26 11:30:00",
+          "basis": "10.670",
+          "basisLabel": "昨收",
+          "rawTrade": "10.640",
+          "bid": false
+        },
+        "hk00700": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.842996400Z",
+          "name": "腾讯控股",
+          "price": "344.000",
+          "percent": "1.96",
+          "time": "2026/11/26 11:59:59",
+          "basis": "337.400",
+          "basisLabel": "昨收",
+          "rawTrade": "344.000",
+          "bid": false
+        },
+        "000001": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.842996400Z",
+          "name": "华夏成长混合",
+          "price": "0.9110",
+          "percent": "-5.89",
+          "time": "2026-11-25",
+          "basis": null,
+          "basisLabel": "披露日涨跌幅",
+          "rawTrade": null,
+          "bid": false
+        },
+        "161725": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.842996400Z",
+          "name": "招商中证白酒指数(LOF)A",
+          "price": "0.5721",
+          "percent": "0.85",
+          "time": "2026-11-25",
+          "basis": null,
+          "basisLabel": "披露日涨跌幅",
+          "rawTrade": null,
+          "bid": false
+        },
+        "nf_IF0": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.842996400Z",
+          "name": "沪深300指数期货连续",
+          "price": "3855.800",
+          "percent": "0.83",
+          "time": "2026-11-26 11:30:00",
+          "basis": "3824.000",
+          "basisLabel": "昨收",
+          "rawTrade": "3855.800",
+          "bid": false
+        },
+        "nf_RB0": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.877920200Z",
+          "name": "螺纹钢连续",
+          "price": "3065.000",
+          "percent": "0.59",
+          "time": "2026-11-26 11:30:00",
+          "basis": "3047.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "3065.000",
+          "bid": false
+        },
+        "nf_RB2701": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.877920200Z",
+          "name": "螺纹钢2701",
+          "price": "3065.000",
+          "percent": "0.59",
+          "time": "2026-11-26 11:30:00",
+          "basis": "3047.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "3065.000",
+          "bid": false
+        },
+        "hf_OIL": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.877920200Z",
+          "name": "布伦特原油",
+          "price": "91.100",
+          "percent": "0.51",
+          "time": "2026-11-26 12:44:02",
+          "basis": "90.640",
+          "basisLabel": "昨结算价",
+          "rawTrade": "91.123",
+          "bid": true
+        },
+        "hf_CHA50CFD": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.877920200Z",
+          "name": "富时中国A50期货",
+          "price": "12530.000",
+          "percent": "0.60",
+          "time": "2026-11-26 12:45:12",
+          "basis": "12455.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "12535.080",
+          "bid": true
+        }
+      },
+      "rows": {
+        "sh600000": "\u003chtml\u003e\u003cb\u003e浦发银行\u003c/b\u003e  sh600000\u003cbr\u003e10.640   -0.28%\u003cbr\u003e报价时间  2026-11-26 11:30:00\u003c/html\u003e",
+        "hk00700": "\u003chtml\u003e\u003cb\u003e腾讯控股\u003c/b\u003e  hk00700\u003cbr\u003e344.000   +1.96%\u003cbr\u003e报价时间  2026/11/26 11:59:59\u003c/html\u003e",
+        "000001": "\u003chtml\u003e\u003cb\u003e华夏成长混合\u003c/b\u003e  000001\u003cbr\u003e净值 0.9110   -5.89%\u003cbr\u003e净值日期  2026-11-25\u003c/html\u003e",
+        "161725": "\u003chtml\u003e\u003cb\u003e招商中证白酒指数(LOF)A\u003c/b\u003e  161725\u003cbr\u003e净值 0.5721   +0.85%\u003cbr\u003e净值日期  2026-11-25\u003c/html\u003e",
+        "nf_IF0": "\u003chtml\u003e\u003cb\u003e沪深300指数期货连续\u003c/b\u003e  nf_IF0\u003cbr\u003e3855.800   +0.83%\u003cbr\u003e报价时间  2026-11-26 11:30:00\u003c/html\u003e",
+        "nf_RB0": "\u003chtml\u003e\u003cb\u003e螺纹钢连续\u003c/b\u003e  nf_RB0\u003cbr\u003e3065.000   +0.59%\u003cbr\u003e报价时间  2026-11-26 11:30:00\u003c/html\u003e",
+        "nf_RB2701": "\u003chtml\u003e\u003cb\u003e螺纹钢2701\u003c/b\u003e  nf_RB2701\u003cbr\u003e3065.000   +0.59%\u003cbr\u003e报价时间  2026-11-26 11:30:00\u003c/html\u003e",
+        "hf_OIL": "\u003chtml\u003e\u003cb\u003e布伦特原油\u003c/b\u003e  hf_OIL\u003cbr\u003e买一 91.100   +0.51%\u003cbr\u003e报价时间  2026-11-26 12:44:02\u003c/html\u003e",
+        "hf_CHA50CFD": "\u003chtml\u003e\u003cb\u003e富时中国A50期货\u003c/b\u003e  hf_CHA50CFD\u003cbr\u003e买一 12530.000   +0.60%\u003cbr\u003e报价时间  2026-11-26 12:45:12\u003c/html\u003e"
+      },
+      "groups": [
+        "STOCK",
+        "FUND",
+        "DOMESTIC",
+        "OVERSEAS"
+      ]
+    },
+    "empty": "\u003chtml\u003enf_RB9999\u003cbr\u003e—   —\u003cbr\u003e报价时间  — · 暂无报价\u003c/html\u003e",
+    "bid": {
+      "code": "hf_OIL",
+      "quote": {
+        "state": "CURRENT",
+        "received": "2026-11-26T04:45:10.877920200Z",
+        "name": "布伦特原油",
+        "price": "91.100",
+        "percent": "0.51",
+        "time": "2026-11-26 12:44:02",
+        "basis": "90.640",
+        "basisLabel": "昨结算价",
+        "rawTrade": "91.123",
+        "bid": true
+      },
+      "row": "\u003chtml\u003e★ \u003cb\u003e布伦特原油\u003c/b\u003e  hf_OIL\u003cbr\u003e买一 91.100   +0.51%\u003cbr\u003e报价时间  2026-11-26 12:44:02\u003c/html\u003e",
+      "status": "hf_OIL   买一 91.100   +0.51%",
+      "tooltip": "\u003chtml\u003e布伦特原油  hf_OIL\u003cbr\u003e买一 91.100   +0.51%\u003cbr\u003e报价时间  2026-11-26 12:44:02\u003cbr\u003e行情源  新浪 CFD 指示报价\u003cbr\u003e涨跌口径  昨结算价  90.640\u003cbr\u003e源成交价  91.123\u003c/html\u003e"
+    },
+    "monthly": "nf_RB2701   3065.000   +0.59%",
+    "windows": {
+      "projects": [
+        "J:/Tools/Leek",
+        "J:/Tools/Leek/template-packages/leek-center"
+      ],
+      "status": "hf_OIL   买一 91.100   +0.51%"
+    },
+    "cycles": {
+      "baseline": {
+        "sh600000": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.877920200Z",
+          "name": "浦发银行",
+          "price": "10.640",
+          "percent": "-0.28",
+          "time": "2026-11-26 11:30:00",
+          "basis": "10.670",
+          "basisLabel": "昨收",
+          "rawTrade": "10.640",
+          "bid": false
+        },
+        "hk00700": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.842996400Z",
+          "name": "腾讯控股",
+          "price": "344.000",
+          "percent": "1.96",
+          "time": "2026/11/26 11:59:59",
+          "basis": "337.400",
+          "basisLabel": "昨收",
+          "rawTrade": "344.000",
+          "bid": false
+        },
+        "000001": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.842996400Z",
+          "name": "华夏成长混合",
+          "price": "0.9110",
+          "percent": "-5.89",
+          "time": "2026-11-25",
+          "basis": null,
+          "basisLabel": "披露日涨跌幅",
+          "rawTrade": null,
+          "bid": false
+        },
+        "161725": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.842996400Z",
+          "name": "招商中证白酒指数(LOF)A",
+          "price": "0.5721",
+          "percent": "0.85",
+          "time": "2026-11-25",
+          "basis": null,
+          "basisLabel": "披露日涨跌幅",
+          "rawTrade": null,
+          "bid": false
+        },
+        "nf_IF0": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.842996400Z",
+          "name": "沪深300指数期货连续",
+          "price": "3855.800",
+          "percent": "0.83",
+          "time": "2026-11-26 11:30:00",
+          "basis": "3824.000",
+          "basisLabel": "昨收",
+          "rawTrade": "3855.800",
+          "bid": false
+        },
+        "nf_RB0": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.877920200Z",
+          "name": "螺纹钢连续",
+          "price": "3065.000",
+          "percent": "0.59",
+          "time": "2026-11-26 11:30:00",
+          "basis": "3047.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "3065.000",
+          "bid": false
+        },
+        "nf_RB2701": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.877920200Z",
+          "name": "螺纹钢2701",
+          "price": "3065.000",
+          "percent": "0.59",
+          "time": "2026-11-26 11:30:00",
+          "basis": "3047.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "3065.000",
+          "bid": false
+        },
+        "hf_OIL": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.877920200Z",
+          "name": "布伦特原油",
+          "price": "91.100",
+          "percent": "0.51",
+          "time": "2026-11-26 12:44:02",
+          "basis": "90.640",
+          "basisLabel": "昨结算价",
+          "rawTrade": "91.123",
+          "bid": true
+        },
+        "hf_CHA50CFD": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:45:10.877920200Z",
+          "name": "富时中国A50期货",
+          "price": "12530.000",
+          "percent": "0.60",
+          "time": "2026-11-26 12:45:12",
+          "basis": "12455.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "12535.080",
+          "bid": true
+        }
+      },
+      "rounds": {
+        "hf_OIL": [
+          {
+            "quote": {
+              "state": "CURRENT",
+              "received": "2026-11-26T04:45:36.691196400Z",
+              "name": "布伦特原油",
+              "price": "91.157",
+              "percent": "0.57",
+              "time": "2026-11-26 12:45:27",
+              "basis": "90.640",
+              "basisLabel": "昨结算价",
+              "rawTrade": "91.157",
+              "bid": false
+            },
+            "widget": "hf_OIL   91.157   +0.57%"
+          },
+          {
+            "quote": {
+              "state": "CURRENT",
+              "received": "2026-11-26T04:46:01.829809600Z",
+              "name": "布伦特原油",
+              "price": "91.157",
+              "percent": "0.57",
+              "time": "2026-11-26 12:45:27",
+              "basis": "90.640",
+              "basisLabel": "昨结算价",
+              "rawTrade": "91.157",
+              "bid": false
+            },
+            "widget": "hf_OIL   91.157   +0.57%"
+          }
+        ],
+        "hf_CHA50CFD": [
+          {
+            "quote": {
+              "state": "CURRENT",
+              "received": "2026-11-26T04:45:36.691196400Z",
+              "name": "富时中国A50期货",
+              "price": "12530.000",
+              "percent": "0.60",
+              "time": "2026-11-26 12:45:34",
+              "basis": "12455.000",
+              "basisLabel": "昨结算价",
+              "rawTrade": "12535.080",
+              "bid": true
+            },
+            "widget": "hf_OIL   91.157   +0.57%"
+          },
+          {
+            "quote": {
+              "state": "CURRENT",
+              "received": "2026-11-26T04:46:01.829809600Z",
+              "name": "富时中国A50期货",
+              "price": "12530.000",
+              "percent": "0.60",
+              "time": "2026-11-26 12:46:01",
+              "basis": "12455.000",
+              "basisLabel": "昨结算价",
+              "rawTrade": "12534.160",
+              "bid": true
+            },
+            "widget": "hf_OIL   91.157   +0.57%"
+          }
+        ]
+      },
+      "requests": [
+        {
+          "at": "2026-11-26T04:45:36.600994400Z",
+          "url": "https://hq.sinajs.cn/list\u003dhf_OIL,hf_CHA50CFD",
+          "failedByTest": false
+        },
+        {
+          "at": "2026-11-26T04:46:01.727644600Z",
+          "url": "https://hq.sinajs.cn/list\u003dhf_OIL,hf_CHA50CFD",
+          "failedByTest": false
+        }
+      ],
+      "shanghai": "2026-11-26T12:46:01.895098600+08:00[Asia/Shanghai]"
+    },
+    "offline": {
+      "before": {
+        "state": "CURRENT",
+        "received": "2026-11-26T04:46:01.829809600Z",
+        "name": "布伦特原油",
+        "price": "91.157",
+        "percent": "0.57",
+        "time": "2026-11-26 12:45:27",
+        "basis": "90.640",
+        "basisLabel": "昨结算价",
+        "rawTrade": "91.157",
+        "bid": false
+      },
+      "after": {
+        "state": "FAILED",
+        "received": "2026-11-26T04:46:01.829809600Z",
+        "name": "布伦特原油",
+        "price": "91.157",
+        "percent": "0.57",
+        "time": "2026-11-26 12:45:27",
+        "basis": "90.640",
+        "basisLabel": "昨结算价",
+        "rawTrade": "91.157",
+        "bid": false
+      },
+      "row": "\u003chtml\u003e★ \u003cb\u003e布伦特原油\u003c/b\u003e  hf_OIL\u003cbr\u003e91.157   +0.57%\u003cbr\u003e报价时间  2026-11-26 12:45:27 · 更新失败 · 保留上次报价\u003c/html\u003e",
+      "status": "hf_OIL   91.157   +0.57%  ·  更新失败 · 保留上次报价"
+    },
+    "recovered": {
+      "state": "CURRENT",
+      "received": "2026-11-26T04:46:27.030661500Z",
+      "name": "布伦特原油",
+      "price": "91.187",
+      "percent": "0.60",
+      "time": "2026-11-26 12:46:28",
+      "basis": "90.640",
+      "basisLabel": "昨结算价",
+      "rawTrade": "91.187",
+      "bid": false
+    }
+  },
+  "plugin": {
+    "id": "cn.leekbox.quotes",
+    "version": "1.0.0",
+    "path": "C:\\Users\\XuJiang\\AppData\\Local\\LeekBox\\rider-263-release-100\\plugins\\leekbox-rider"
+  },
+  "ok": true,
+  "wire": [
+    {
+      "at": "2026-11-26T04:45:10.315625700Z",
+      "url": "https://hq.sinajs.cn/list\u003dsh600000",
+      "file": "001.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:45:10.453494400Z",
+      "url": "https://hq.sinajs.cn/list\u003dnf_IF0",
+      "file": "002.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:45:10.454491900Z",
+      "url": "https://qt.gtimg.cn/q\u003d?q\u003dr_hk00700\u0026fmt\u003djson",
+      "file": "003.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:45:10.454491900Z",
+      "url": "https://api.fund.eastmoney.com/f10/lsjz?fundCode\u003d161725\u0026pageIndex\u003d1\u0026pageSize\u003d1",
+      "file": "005.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:45:10.454491900Z",
+      "url": "https://api.fund.eastmoney.com/f10/lsjz?fundCode\u003d000001\u0026pageIndex\u003d1\u0026pageSize\u003d1",
+      "file": "004.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:45:10.659125100Z",
+      "url": "https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?m\u003d1\u0026key\u003d000001",
+      "file": "006.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:45:10.659125100Z",
+      "url": "https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?m\u003d1\u0026key\u003d161725",
+      "file": "007.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:45:10.844927Z",
+      "url": "https://hq.sinajs.cn/list\u003dsh600000,nf_RB0,nf_RB2701,hf_OIL,hf_CHA50CFD",
+      "file": "008.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:45:11.538483800Z",
+      "url": "https://hq.sinajs.cn/list\u003dnf_RB9999",
+      "file": "009.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:45:36.600994400Z",
+      "url": "https://hq.sinajs.cn/list\u003dhf_OIL,hf_CHA50CFD",
+      "file": "010.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:46:01.727644600Z",
+      "url": "https://hq.sinajs.cn/list\u003dhf_OIL,hf_CHA50CFD",
+      "file": "011.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:46:26.932421300Z",
+      "url": "https://hq.sinajs.cn/list\u003dhf_OIL,hf_CHA50CFD",
+      "file": "012.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:46:27.078502200Z",
+      "url": "https://hq.sinajs.cn/list\u003dsh600000,nf_IF0,nf_RB0,nf_RB2701,hf_OIL,hf_CHA50CFD",
+      "file": "015.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:46:27.078502200Z",
+      "url": "https://qt.gtimg.cn/q\u003d?q\u003dr_hk00700\u0026fmt\u003djson",
+      "file": "014.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:46:27.078502200Z",
+      "url": "https://api.fund.eastmoney.com/f10/lsjz?fundCode\u003d161725\u0026pageIndex\u003d1\u0026pageSize\u003d1",
+      "file": "016.raw",
+      "status": 200
+    },
+    {
+      "at": "2026-11-26T04:46:27.078502200Z",
+      "url": "https://api.fund.eastmoney.com/f10/lsjz?fundCode\u003d000001\u0026pageIndex\u003d1\u0026pageSize\u003d1",
+      "file": "013.raw",
+      "status": 200
+    }
+  ],
+  "requests": [
+    {
+      "at": "2026-11-26T04:45:10.315625700Z",
+      "url": "https://hq.sinajs.cn/list\u003dsh600000",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:45:10.453494400Z",
+      "url": "https://hq.sinajs.cn/list\u003dnf_IF0",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:45:10.454491900Z",
+      "url": "https://api.fund.eastmoney.com/f10/lsjz?fundCode\u003d161725\u0026pageIndex\u003d1\u0026pageSize\u003d1",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:45:10.454491900Z",
+      "url": "https://api.fund.eastmoney.com/f10/lsjz?fundCode\u003d000001\u0026pageIndex\u003d1\u0026pageSize\u003d1",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:45:10.454491900Z",
+      "url": "https://qt.gtimg.cn/q\u003d?q\u003dr_hk00700\u0026fmt\u003djson",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:45:10.659125100Z",
+      "url": "https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?m\u003d1\u0026key\u003d161725",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:45:10.659125100Z",
+      "url": "https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?m\u003d1\u0026key\u003d000001",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:45:10.844927Z",
+      "url": "https://hq.sinajs.cn/list\u003dsh600000,nf_RB0,nf_RB2701,hf_OIL,hf_CHA50CFD",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:45:11.538483800Z",
+      "url": "https://hq.sinajs.cn/list\u003dnf_RB9999",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:45:36.600994400Z",
+      "url": "https://hq.sinajs.cn/list\u003dhf_OIL,hf_CHA50CFD",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:46:01.727644600Z",
+      "url": "https://hq.sinajs.cn/list\u003dhf_OIL,hf_CHA50CFD",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:46:01.903072400Z",
+      "url": "https://api.fund.eastmoney.com/f10/lsjz?fundCode\u003d161725\u0026pageIndex\u003d1\u0026pageSize\u003d1",
+      "failedByTest": true
+    },
+    {
+      "at": "2026-11-26T04:46:01.903072400Z",
+      "url": "https://hq.sinajs.cn/list\u003dsh600000,nf_IF0,nf_RB0,nf_RB2701,hf_OIL,hf_CHA50CFD",
+      "failedByTest": true
+    },
+    {
+      "at": "2026-11-26T04:46:01.903072400Z",
+      "url": "https://qt.gtimg.cn/q\u003d?q\u003dr_hk00700\u0026fmt\u003djson",
+      "failedByTest": true
+    },
+    {
+      "at": "2026-11-26T04:46:01.903072400Z",
+      "url": "https://api.fund.eastmoney.com/f10/lsjz?fundCode\u003d000001\u0026pageIndex\u003d1\u0026pageSize\u003d1",
+      "failedByTest": true
+    },
+    {
+      "at": "2026-11-26T04:46:26.932421300Z",
+      "url": "https://hq.sinajs.cn/list\u003dhf_OIL,hf_CHA50CFD",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:46:27.078502200Z",
+      "url": "https://api.fund.eastmoney.com/f10/lsjz?fundCode\u003d000001\u0026pageIndex\u003d1\u0026pageSize\u003d1",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:46:27.078502200Z",
+      "url": "https://hq.sinajs.cn/list\u003dsh600000,nf_IF0,nf_RB0,nf_RB2701,hf_OIL,hf_CHA50CFD",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:46:27.078502200Z",
+      "url": "https://qt.gtimg.cn/q\u003d?q\u003dr_hk00700\u0026fmt\u003djson",
+      "failedByTest": false
+    },
+    {
+      "at": "2026-11-26T04:46:27.078502200Z",
+      "url": "https://api.fund.eastmoney.com/f10/lsjz?fundCode\u003d161725\u0026pageIndex\u003d1\u0026pageSize\u003d1",
+      "failedByTest": false
+    }
+  ],
+  "ended": "2026-11-26T04:46:27.352629Z"
+}

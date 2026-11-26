@@ -1,0 +1,142 @@
+{
+  "phase": "restart",
+  "started": "2026-11-26T04:47:03.305989300Z",
+  "pid": 104960,
+  "build": "RD-263.7307.355",
+  "checks": {
+    "restored": {
+      "codes": [
+        "sh600000",
+        "hk00700",
+        "000001",
+        "161725",
+        "nf_IF0",
+        "nf_RB0",
+        "nf_RB2701",
+        "hf_OIL",
+        "hf_CHA50CFD"
+      ],
+      "pinned": "nf_RB2701",
+      "widget": "nf_RB2701   3065.000   +0.59%  ·  上次报价",
+      "rows": {
+        "sh600000": {
+          "state": "CACHED",
+          "received": "2026-11-26T04:46:27.242491800Z",
+          "name": "浦发银行",
+          "price": "10.640",
+          "percent": "-0.28",
+          "time": "2026-11-26 11:30:00",
+          "basis": "10.670",
+          "basisLabel": "昨收",
+          "rawTrade": "10.640",
+          "bid": false
+        },
+        "hk00700": {
+          "state": "CACHED",
+          "received": "2026-11-26T04:46:27.242491800Z",
+          "name": "腾讯控股",
+          "price": "344.000",
+          "percent": "1.96",
+          "time": "2026/11/26 11:59:59",
+          "basis": "337.400",
+          "basisLabel": "昨收",
+          "rawTrade": "344.000",
+          "bid": false
+        },
+        "000001": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:46:59.452254600Z",
+          "name": "华夏成长混合",
+          "price": "0.9110",
+          "percent": "-5.89",
+          "time": "2026-11-25",
+          "basis": null,
+          "basisLabel": "披露日涨跌幅",
+          "rawTrade": null,
+          "bid": false
+        },
+        "161725": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:46:59.452254600Z",
+          "name": "招商中证白酒指数(LOF)A",
+          "price": "0.5721",
+          "percent": "0.85",
+          "time": "2026-11-25",
+          "basis": null,
+          "basisLabel": "披露日涨跌幅",
+          "rawTrade": null,
+          "bid": false
+        },
+        "nf_IF0": {
+          "state": "CACHED",
+          "received": "2026-11-26T04:46:27.242491800Z",
+          "name": "沪深300指数期货连续",
+          "price": "3855.800",
+          "percent": "0.83",
+          "time": "2026-11-26 11:30:00",
+          "basis": "3824.000",
+          "basisLabel": "昨收",
+          "rawTrade": "3855.800",
+          "bid": false
+        },
+        "nf_RB0": {
+          "state": "CACHED",
+          "received": "2026-11-26T04:46:27.242491800Z",
+          "name": "螺纹钢连续",
+          "price": "3065.000",
+          "percent": "0.59",
+          "time": "2026-11-26 11:30:00",
+          "basis": "3047.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "3065.000",
+          "bid": false
+        },
+        "nf_RB2701": {
+          "state": "CACHED",
+          "received": "2026-11-26T04:46:27.242491800Z",
+          "name": "螺纹钢2701",
+          "price": "3065.000",
+          "percent": "0.59",
+          "time": "2026-11-26 11:30:00",
+          "basis": "3047.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "3065.000",
+          "bid": false
+        },
+        "hf_OIL": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:46:59.452254600Z",
+          "name": "布伦特原油",
+          "price": "91.160",
+          "percent": "0.57",
+          "time": "2026-11-26 12:46:51",
+          "basis": "90.640",
+          "basisLabel": "昨结算价",
+          "rawTrade": "91.177",
+          "bid": true
+        },
+        "hf_CHA50CFD": {
+          "state": "CURRENT",
+          "received": "2026-11-26T04:46:59.452254600Z",
+          "name": "富时中国A50期货",
+          "price": "12530.000",
+          "percent": "0.60",
+          "time": "2026-11-26 12:47:00",
+          "basis": "12455.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "12536.610",
+          "bid": true
+        }
+      }
+    }
+  },
+  "plugin": {
+    "id": "cn.leekbox.quotes",
+    "version": "1.0.0",
+    "path": "C:\\Users\\XuJiang\\AppData\\Local\\LeekBox\\rider-263-release-100\\plugins\\leekbox-rider"
+  },
+  "ok": true,
+  "wire": [],
+  "requests": [],
+  "ended": "2026-11-26T04:47:05.627888Z"
+}

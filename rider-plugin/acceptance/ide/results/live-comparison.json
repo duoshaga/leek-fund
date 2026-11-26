@@ -1,0 +1,164 @@
+{
+  "nine": {
+    "sh600000": {
+      "code": "sh600000",
+      "sourceTime": "2026-11-26 11:30:00",
+      "price": "10.640",
+      "percent": "-0.28",
+      "basis": "10.670",
+      "rawTrade": "10.640",
+      "bid": false,
+      "observation": "008.raw",
+      "observationOffsetSeconds": -0.033
+    },
+    "hk00700": {
+      "code": "hk00700",
+      "sourceTime": "2026/11/26 11:59:59",
+      "price": "344.000",
+      "percent": "1.96",
+      "basis": "337.400",
+      "rawTrade": "344.000",
+      "bid": false,
+      "observation": "003.raw",
+      "observationOffsetSeconds": -0.389
+    },
+    "000001": {
+      "code": "000001",
+      "sourceTime": "2026-11-25",
+      "price": "0.9110",
+      "percent": "-5.89",
+      "basis": null,
+      "rawTrade": null,
+      "bid": false,
+      "observation": "004.raw",
+      "observationOffsetSeconds": -0.389
+    },
+    "161725": {
+      "code": "161725",
+      "sourceTime": "2026-11-25",
+      "price": "0.5721",
+      "percent": "0.85",
+      "basis": null,
+      "rawTrade": null,
+      "bid": false,
+      "observation": "005.raw",
+      "observationOffsetSeconds": -0.389
+    },
+    "nf_IF0": {
+      "code": "nf_IF0",
+      "sourceTime": "2026-11-26 11:30:00",
+      "price": "3855.800",
+      "percent": "0.83",
+      "basis": "3824.000",
+      "rawTrade": "3855.800",
+      "bid": false,
+      "observation": "002.raw",
+      "observationOffsetSeconds": -0.39
+    },
+    "nf_RB0": {
+      "code": "nf_RB0",
+      "sourceTime": "2026-11-26 11:30:00",
+      "price": "3065.000",
+      "percent": "0.59",
+      "basis": "3047.000",
+      "rawTrade": "3065.000",
+      "bid": false,
+      "observation": "008.raw",
+      "observationOffsetSeconds": -0.033
+    },
+    "nf_RB2701": {
+      "code": "nf_RB2701",
+      "sourceTime": "2026-11-26 11:30:00",
+      "price": "3065.000",
+      "percent": "0.59",
+      "basis": "3047.000",
+      "rawTrade": "3065.000",
+      "bid": false,
+      "observation": "008.raw",
+      "observationOffsetSeconds": -0.033
+    },
+    "hf_OIL": {
+      "code": "hf_OIL",
+      "sourceTime": "2026-11-26 12:44:02",
+      "price": "91.100",
+      "percent": "0.51",
+      "basis": "90.640",
+      "rawTrade": "91.123",
+      "bid": true,
+      "observation": "008.raw",
+      "observationOffsetSeconds": -0.033
+    },
+    "hf_CHA50CFD": {
+      "code": "hf_CHA50CFD",
+      "sourceTime": "2026-11-26 12:45:12",
+      "price": "12530.000",
+      "percent": "0.60",
+      "basis": "12455.000",
+      "rawTrade": "12535.080",
+      "bid": true,
+      "observation": "008.raw",
+      "observationOffsetSeconds": -0.033
+    }
+  },
+  "bid": {
+    "code": "hf_OIL",
+    "sourceTime": "2026-11-26 12:44:02",
+    "price": "91.100",
+    "percent": "0.51",
+    "basis": "90.640",
+    "rawTrade": "91.123",
+    "bid": true,
+    "observation": "008.raw",
+    "observationOffsetSeconds": -0.033
+  },
+  "cycles": {
+    "hf_OIL": [
+      {
+        "code": "hf_OIL",
+        "sourceTime": "2026-11-26 12:45:27",
+        "price": "91.157",
+        "percent": "0.57",
+        "basis": "90.640",
+        "rawTrade": "91.157",
+        "bid": false,
+        "observation": "010.raw",
+        "observationOffsetSeconds": -0.09
+      },
+      {
+        "code": "hf_OIL",
+        "sourceTime": "2026-11-26 12:45:27",
+        "price": "91.157",
+        "percent": "0.57",
+        "basis": "90.640",
+        "rawTrade": "91.157",
+        "bid": false,
+        "observation": "011.raw",
+        "observationOffsetSeconds": -0.102
+      }
+    ],
+    "hf_CHA50CFD": [
+      {
+        "code": "hf_CHA50CFD",
+        "sourceTime": "2026-11-26 12:45:34",
+        "price": "12530.000",
+        "percent": "0.60",
+        "basis": "12455.000",
+        "rawTrade": "12535.080",
+        "bid": true,
+        "observation": "010.raw",
+        "observationOffsetSeconds": -0.09
+      },
+      {
+        "code": "hf_CHA50CFD",
+        "sourceTime": "2026-11-26 12:46:01",
+        "price": "12530.000",
+        "percent": "0.60",
+        "basis": "12455.000",
+        "rawTrade": "12534.160",
+        "bid": true,
+        "observation": "011.raw",
+        "observationOffsetSeconds": -0.102
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "pid": 73744,
+  "started": "2026-11-26T05:37:44.446436400Z",
+  "build": "RD-263.7307.355",
+  "installed": "1.0.1",
+  "loadedFrom": "C:\\Users\\XuJiang\\AppData\\Local\\LeekBox\\rider-263-release-100\\plugins\\leekbox-rider",
+  "watchlist": {
+    "symbols": [
+      "sh600000",
+      "hk00700",
+      "000001",
+      "161725",
+      "nf_IF0",
+      "nf_RB0",
+      "nf_RB2701",
+      "hf_OIL",
+      "hf_CHA50CFD"
+    ],
+    "pinned": "nf_RB2701",
+    "previousVersion": "1.0.0"
+  }
+}

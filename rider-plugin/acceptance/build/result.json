@@ -1,0 +1,112 @@
+{
+  "checkedAt": "2026-11-26T05:42:01+00:00",
+  "archive": "dist/leekbox-rider-1.0.1.zip",
+  "archiveBytes": 139105,
+  "sha256": "39706ed671acf39a4a799affd7626c567e38f7d59e7688f5d2f9d830b726e67f",
+  "gradleBuildSha256": "39706ed671acf39a4a799affd7626c567e38f7d59e7688f5d2f9d830b726e67f",
+  "id": "cn.leekbox.quotes",
+  "version": "1.0.1",
+  "target": {
+    "ide": "JetBrains Rider",
+    "version": "2026.3.0.2",
+    "build": "RD-263.7307.355",
+    "runtime": "25.0.4.1 (JetBrains s.r.o. 25.0.4.1+1-b635.79)"
+  },
+  "build": {
+    "gradle": "9.9.2",
+    "kotlin": "2.4.21",
+    "intellijPlatformGradlePlugin": "2.20.1",
+    "command": "gradlew.bat test buildPlugin verifyPlugin",
+    "result": "BUILD SUCCESSFUL"
+  },
+  "verification": {
+    "pluginVerifier": "1.411",
+    "gradle": "Compatible",
+    "cliOffline": "Compatible"
+  },
+  "tests": {
+    "framework": "JUnit Jupiter 5.14.4",
+    "passed": 34,
+    "suites": [
+      {
+        "suite": "leek.FuturesDirectoryTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "rankedMatchesKeepDistinctContractsAndSearchProviderCodes()",
+          "aluminaCanBeFoundByCodeChineseNameOrCompleteContract()"
+        ]
+      },
+      {
+        "suite": "leek.ProviderTest",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "keep published unit NAV and only the provider supplied percentage()",
+          "commodity details preserve genuine zero volume and distinguish it from missing volume()",
+          "read stock prices and original times from the respective feeds()",
+          "use index previous close and commodity previous settlement from the same batch()",
+          "show buy one for an out of spread trade or missing trade and retain its raw value()",
+          "an explicit empty carries no quote and one provider failure leaves other results available()",
+          "normalize codes without collapsing distinct futures contracts()",
+          "Tencent matches its records by code and recognizes the explicit no-match sentinel()",
+          "a protocol error keeps previous data eligible instead of masquerading as empty()"
+        ]
+      },
+      {
+        "suite": "leek.SearchTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "a failed or missing feed preserves known local results and the other provider()",
+          "market-prefixed fragments send only digits to Tencent and retain that market()",
+          "Sina futures search supplements the catalogue and respects an explicit market prefix()",
+          "numeric search preserves separately named stock and fund candidates()",
+          "fund names and stock pinyin can return remotely found instruments()"
+        ]
+      },
+      {
+        "suite": "leek.SessionTest",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "iceHolidayCloseOverridesRegularSourceHours()",
+          "disclosureCadenceAndUnverifiedContracts()",
+          "brentDstAndSundayOpeningUseUsEasternClock()",
+          "shfeNightTradingDaySurvivesMidnightAndWeekend()",
+          "brentYearEndFollowsTheOutrightContractInAppendixTwo()",
+          "hongKongCashSharesUseLocalLunchHalfDayAndHolidays()",
+          "aluminaClosesAfterRebarAndBeforeGold()",
+          "mainlandAfterHoursUsesEffectiveDateAndBoard()",
+          "mainlandBreaksAndHolidayEves()",
+          "sourceA50ReopensAtSeventeenAndTradesOnMainlandHolidays()",
+          "manualOnlyReasonDistinguishesClosedFromMissingCalendar()"
+        ]
+      },
+      {
+        "suite": "leek.WatchBookTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "oxideContractHoverRetainsSessionStatsAcrossRestart()",
+          "transportFailureRetainsPriceAndTimeAndSuccessfulEmptyClearsThem()",
+          "bidFallbackAndMissingPercentAreConsistentOnBothSurfaces()",
+          "selectedSearchNameSurvivesFirstOfflineFetchAndRestart()",
+          "exchangeClockReplayPollsOnlyGoldAfterRebarClosesAndKeepsItsTradingDay()",
+          "overlappingRequestsAndLateRemovalDoNotOverwriteReplacement()",
+          "watchlistCacheAndExactPinnedMonthSurviveReload()"
+        ]
+      }
+    ]
+  }
+}

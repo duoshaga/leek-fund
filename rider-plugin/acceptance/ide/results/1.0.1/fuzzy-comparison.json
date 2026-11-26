@@ -1,0 +1,26 @@
+{
+  "oxide": {
+    "nf_AO0": {
+      "code": "nf_AO0",
+      "sourceTime": "2026-11-26 13:41:47",
+      "price": "2553.000",
+      "percent": "0.04",
+      "basis": "2552.000",
+      "rawTrade": "2553.000",
+      "bid": false,
+      "observation": "002.raw",
+      "observationOffsetSeconds": -0.033
+    },
+    "nf_AO2702": {
+      "code": "nf_AO2702",
+      "sourceTime": "2026-11-26 13:41:47",
+      "price": "2558.000",
+      "percent": "0.00",
+      "basis": "2558.000",
+      "rawTrade": "2558.000",
+      "bid": false,
+      "observation": "001.raw",
+      "observationOffsetSeconds": -0.121
+    }
+  }
+}

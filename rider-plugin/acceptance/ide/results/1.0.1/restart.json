@@ -1,0 +1,193 @@
+{
+  "phase": "restart",
+  "started": "2026-11-26T05:51:59.717393600Z",
+  "pid": 22692,
+  "build": "RD-263.7307.355",
+  "checks": {
+    "restored": {
+      "codes": [
+        "sh600000",
+        "hk00700",
+        "000001",
+        "161725",
+        "nf_IF0",
+        "nf_RB0",
+        "nf_RB2701",
+        "hf_OIL",
+        "hf_CHA50CFD"
+      ],
+      "pinned": "nf_RB2701",
+      "widget": "nf_RB2701   3061   +0.46%",
+      "rows": {
+        "sh600000": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:51:53.845178700Z",
+          "name": "浦发银行",
+          "price": "10.680",
+          "percent": "0.09",
+          "time": "2026-11-26 13:51:54",
+          "basis": "10.670",
+          "basisLabel": "昨收",
+          "rawTrade": "10.680",
+          "bid": false,
+          "day": {
+            "open": "10.680",
+            "high": "10.690",
+            "low": "10.530",
+            "volume": "35284996",
+            "turnover": "375184671.000"
+          }
+        },
+        "hk00700": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:51:53.845178700Z",
+          "name": "腾讯控股",
+          "price": "343.600",
+          "percent": "1.84",
+          "time": "2026/11/26 13:51:52",
+          "basis": "337.400",
+          "basisLabel": "昨收",
+          "rawTrade": "343.600",
+          "bid": false,
+          "day": {
+            "open": "344.800",
+            "high": "348.800",
+            "low": "337.800",
+            "volume": "16682368.0",
+            "turnover": "5729772671.190"
+          }
+        },
+        "000001": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:51:53.845178700Z",
+          "name": "华夏成长混合",
+          "price": "0.9110",
+          "percent": "-5.89",
+          "time": "2026-11-25",
+          "basis": null,
+          "basisLabel": "披露日涨跌幅",
+          "rawTrade": null,
+          "bid": false,
+          "day": null
+        },
+        "161725": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:51:53.845178700Z",
+          "name": "招商中证白酒指数(LOF)A",
+          "price": "0.5721",
+          "percent": "0.85",
+          "time": "2026-11-25",
+          "basis": null,
+          "basisLabel": "披露日涨跌幅",
+          "rawTrade": null,
+          "bid": false,
+          "day": null
+        },
+        "nf_IF0": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:51:53.845178700Z",
+          "name": "沪深300指数期货连续",
+          "price": "3842.600",
+          "percent": "0.49",
+          "time": "2026-11-26 13:51:55",
+          "basis": "3824.000",
+          "basisLabel": "昨收",
+          "rawTrade": "3842.600",
+          "bid": false,
+          "day": {
+            "open": "3858.000",
+            "high": "3888.400",
+            "low": "3842.400",
+            "volume": "52605",
+            "turnover": null
+          }
+        },
+        "nf_RB0": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:51:53.845178700Z",
+          "name": "螺纹钢连续",
+          "price": "3061.000",
+          "percent": "0.46",
+          "time": "2026-11-26 13:51:55",
+          "basis": "3047.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "3061.000",
+          "bid": false,
+          "day": {
+            "open": "3065.000",
+            "high": "3071.000",
+            "low": "3051.000",
+            "volume": "515470",
+            "turnover": null
+          }
+        },
+        "nf_RB2701": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:51:53.845178700Z",
+          "name": "螺纹钢2701",
+          "price": "3061.000",
+          "percent": "0.46",
+          "time": "2026-11-26 13:51:55",
+          "basis": "3047.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "3061.000",
+          "bid": false,
+          "day": {
+            "open": "3065.000",
+            "high": "3071.000",
+            "low": "3051.000",
+            "volume": "515470",
+            "turnover": null
+          }
+        },
+        "hf_OIL": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:51:53.845178700Z",
+          "name": "布伦特原油",
+          "price": "91.230",
+          "percent": "0.65",
+          "time": "2026-11-26 13:51:53",
+          "basis": "90.640",
+          "basisLabel": "昨结算价",
+          "rawTrade": "91.183",
+          "bid": true,
+          "day": {
+            "open": "90.690",
+            "high": "92.080",
+            "low": "90.490",
+            "volume": "23658",
+            "turnover": null
+          }
+        },
+        "hf_CHA50CFD": {
+          "state": "CURRENT",
+          "received": "2026-11-26T05:51:53.845178700Z",
+          "name": "富时中国A50期货",
+          "price": "12503.000",
+          "percent": "0.39",
+          "time": "2026-11-26 13:51:55",
+          "basis": "12455.000",
+          "basisLabel": "昨结算价",
+          "rawTrade": "12511.800",
+          "bid": true,
+          "day": {
+            "open": "12459.000",
+            "high": "12582.000",
+            "low": "12336.000",
+            "volume": "361697",
+            "turnover": null
+          }
+        }
+      }
+    }
+  },
+  "plugin": {
+    "id": "cn.leekbox.quotes",
+    "version": "1.0.1",
+    "path": "C:\\Users\\XuJiang\\AppData\\Local\\LeekBox\\rider-263-release-101\\plugins\\leekbox-rider"
+  },
+  "ok": true,
+  "wire": [],
+  "requests": [],
+  "ended": "2026-11-26T05:52:01.715637300Z"
+}
