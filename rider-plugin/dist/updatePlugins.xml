@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugins>
-    <plugin id="cn.leekbox.quotes" version="1.0.4" url="leekbox-rider-1.0.4.zip">
+    <plugin id="cn.leekbox.quotes" version="1.0.6" url="leekbox-rider-1.0.6.zip">
         <name>LeekBox</name>
         <idea-version since-build="263.7307.355"/>
     </plugin>

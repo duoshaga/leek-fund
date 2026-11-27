@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('live','restart','monthly','close','fuzzy','index-search','appearance','watch-order','order-restart','update-source')][string]$Phase = 'live',
+    [ValidateSet('live','restart','monthly','close','fuzzy','index-search','appearance','watch-order','order-restart','update-source','refresh-hours','hours-restart','hours-legacy','hours-discovery','hours-cache')][string]$Phase = 'live',
     [switch]$Install,
     [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '1.0.1',
     [ValidatePattern('^rider-263-[A-Za-z0-9-]+$')][string]$ProfileName = ('rider-263-release-' + $Version.Replace('.', ''))

@@ -41,11 +41,16 @@ object MarketSessions {
     private val iceEarly2000 = dates(2026, "11-27 12-31") + dates(2027, "11-26 12-31")
     private val iceEarly1900 = LocalDate.of(2026, 12, 24)
     private val iceEarly1300 = LocalDate.of(2027, 12, 24)
-    // Local closing times in HHmm. All three SHFE nights start at 21:00.
-    private val shfeNightClose = mapOf("RB" to 2300, "AO" to 100, "AU" to 230)
+    private fun commodityHours(nightClose: String) = requireNotNull(
+        DomesticRefreshHours.parse("09:00-10:15, 10:30-11:30, 13:30-15:00, 21:00-$nightClose"))
+    private val until2300 = commodityHours("23:00")
+    private val domesticHours = mapOf(
+        "IF" to requireNotNull(DomesticRefreshHours.parse("09:30-11:30, 13:00-15:00")),
+        "RB" to until2300, "FG" to until2300, "AO" to commodityHours("01:00"), "AU" to commodityHours("02:30"),
+    )
 
     private fun mainlandCode(code: String) = code.startsWith("sh") || code.startsWith("sz") || code.startsWith("bj")
-    private fun futuresProduct(code: String) = code.removePrefix("nf_").takeWhile { it in 'A'..'Z' }
+    internal fun builtInHours(symbol: Symbol) = domesticHours[symbol.domesticProduct]
     private fun iceTradeDate(eastern: ZonedDateTime) =
         eastern.toLocalDate().plusDays(if (eastern.hour >= 18) 1 else 0)
 
@@ -67,13 +72,14 @@ object MarketSessions {
                 mainlandCode(symbol.code) -> mainlandStockDay(symbol.code, date, hhmm)
                 else -> null
             }
-            Group.DOMESTIC -> domesticDay(symbol.code, date, hhmm)
+            Group.DOMESTIC -> builtInHours(symbol)?.let { domesticDay(it, date, hhmm, ::mainlandDay) }
             Group.OVERSEAS -> if (symbol.code == "hf_CHA50CFD") a50Day(date, hhmm) else null
         }
     }
 
     /** Null also covers a *scheduled* holiday or break; these symbols resume automatically when they reopen. */
-    fun manualOnlyReason(symbol: Symbol, instant: Instant): String? {
+    @JvmOverloads
+    fun manualOnlyReason(symbol: Symbol, instant: Instant, marketHours: DomesticRefreshHours? = null): String? {
         val unknown = "该品种的交易时段尚未核实，可手动刷新"
         fun checkDate(date: LocalDate, covered: ClosedRange<LocalDate>, market: String) =
             if (date in covered) null else "${market}交易日历已核实至 ${covered.endInclusive}，当前日期可手动刷新"
@@ -87,14 +93,11 @@ object MarketSessions {
                 mainlandCode(symbol.code) -> checkDate(date, mainlandDates, "内地")
                 else -> unknown
             }
-            Group.DOMESTIC -> when (val product = futuresProduct(symbol.code)) {
-                "IF" -> checkDate(date, mainlandDates, "内地")
-                in shfeNightClose.keys -> {
-                    val evening = shfeEvening(product, date, local.hour * 100 + local.minute)
-                    val sessionDate = if (evening != null && mainlandDay(evening)) nextWeekday(evening) else date
-                    checkDate(sessionDate, mainlandDates, "上期所")
-                }
-                else -> unknown
+            Group.DOMESTIC -> {
+                val hours = marketHours ?: builtInHours(symbol) ?: return unknown
+                val evening = hours.openingEvening(date, local.hour * 100 + local.minute)
+                val sessionDate = if (evening != null && mainlandDay(evening)) nextWeekday(evening) else date
+                checkDate(sessionDate, mainlandDates, "内地期货")?.plus("。可点击时钟设置自动刷新时段。")
             }
             Group.OVERSEAS -> when (symbol.code) {
                 "hf_OIL" -> checkDate(iceTradeDate(instant.atZone(newYork)), iceDates, "ICE")
@@ -116,6 +119,13 @@ object MarketSessions {
         return tradingDay(symbol, instant)?.let { quoteInterval }
     }
 
+    fun interval(row: WatchRow, instant: Instant): Duration? {
+        val hours = row.refreshHours ?: row.marketHours ?: return interval(row.symbol, instant)
+        val local = instant.atZone(shanghai)
+        val isTradingDate = if (row.refreshHours != null) ::mainlandWeekday else ::mainlandDay
+        return domesticDay(hours, local.toLocalDate(), local.hour * 100 + local.minute, isTradingDate)?.let { quoteInterval }
+    }
+
     private fun weekday(date: LocalDate) = date.dayOfWeek != SATURDAY && date.dayOfWeek != SUNDAY
     private fun nextWeekday(date: LocalDate) = date.plusDays(when (date.dayOfWeek) {
         FRIDAY -> 3L
@@ -123,7 +133,8 @@ object MarketSessions {
         else -> 1L
     })
 
-    private fun mainlandDay(date: LocalDate) = date in mainlandDates && weekday(date) && date !in mainlandHolidays
+    private fun mainlandWeekday(date: LocalDate) = weekday(date) && date !in mainlandHolidays
+    private fun mainlandDay(date: LocalDate) = date in mainlandDates && mainlandWeekday(date)
     private fun mainlandCashHours(hhmm: Int) = hhmm in 930..<1130 || hhmm in 1300..<1500
 
     private fun mainlandStockDay(code: String, date: LocalDate, hhmm: Int): LocalDate? {
@@ -141,26 +152,11 @@ object MarketSessions {
         return date.takeIf { hhmm in 900..<1200 || hhmm in 1300..<1610 }
     }
 
-    private fun domesticDay(code: String, date: LocalDate, hhmm: Int): LocalDate? {
-        val product = futuresProduct(code)
-        if (product == "IF") return date.takeIf { mainlandDay(it) && mainlandCashHours(hhmm) }
-        if (product !in shfeNightClose) return null
-        if (hhmm in 900..<1015 || hhmm in 1030..<1130 || hhmm in 1330..<1500) {
-            return date.takeIf(::mainlandDay)
-        }
-        val evening = shfeEvening(product, date, hhmm) ?: return null
+    private fun domesticDay(hours: DomesticRefreshHours, date: LocalDate, hhmm: Int, isTradingDate: (LocalDate) -> Boolean): LocalDate? {
+        if (hours.includesDay(hhmm)) return date.takeIf(isTradingDate)
+        val evening = hours.openingEvening(date, hhmm) ?: return null
         // Friday night belongs to Monday. No night session precedes a weekday holiday.
-        return nextWeekday(evening).takeIf { mainlandDay(evening) && mainlandDay(it) }
-    }
-
-    private fun shfeEvening(product: String, date: LocalDate, hhmm: Int): LocalDate? {
-        val close = shfeNightClose.getValue(product)
-        val crossesMidnight = close < 2100
-        return when {
-            hhmm >= 2100 && (crossesMidnight || hhmm < close) -> date
-            crossesMidnight && hhmm < close -> date.minusDays(1)
-            else -> null
-        }
+        return nextWeekday(evening).takeIf { isTradingDate(evening) && isTradingDate(it) }
     }
 
     private fun a50Day(date: LocalDate, hhmm: Int): LocalDate? {

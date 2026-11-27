@@ -6,6 +6,9 @@ import java.util.Locale
 enum class Group { STOCK, FUND, DOMESTIC, OVERSEAS }
 
 data class Symbol(val code: String, val group: Group) {
+    internal val domesticProduct: String? get() =
+        if (group == Group.DOMESTIC) code.removePrefix("nf_").takeWhile { it in 'A'..'Z' } else null
+
     companion object {
         private val mainland = Regex("(?:sh|sz|bj)[0-9]{6}")
         private val hongKong = Regex("hk[0-9]{5}")

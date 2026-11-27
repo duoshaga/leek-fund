@@ -173,4 +173,54 @@ class WatchBookTest {
         poll("2026-11-27T00:01:00", au.code)
         poll("2026-11-27T02:30:00")
     }
+
+    @Test fun savedCustomWindowsDriveOnlyTheirContractAndCanBeCleared() {
+        val glass = "nf_FG2705"
+        val apple = "nf_AP2705"
+        val saved = SavedWatchlist().apply {
+            items.addAll(listOf(glass, apple, "nf_AP2701").map { SavedItem().apply { code = it } })
+        }
+        val watch = WatchBook(MarketSessions::interval)
+        watch.restore(saved)
+        assertTrue(watch.setRefreshHours(apple, "9:00-10:15， 13:30-15:00, 21:00-01:00"))
+        assertFalse(watch.setRefreshHours(apple, "09:00-25:00"))
+        val restored = WatchBook(MarketSessions::interval)
+        restored.restore(watch.save())
+        assertEquals("09:00-10:15, 13:30-15:00, 21:00-01:00",
+            restored.view().rows.single { it.symbol.code == apple }.refreshHours?.text)
+        fun poll(local: String, vararg expected: String) {
+            val now = java.time.OffsetDateTime.parse(local + "+08:00").toInstant()
+            val batch = restored.reserve(now)
+            assertEquals(expected.toList(), batch.map { it.symbol.code }, local)
+            batch.forEach { restored.complete(it, Result.success(null), now) }
+        }
+        poll("2026-11-27T09:00:00", glass, apple)
+        poll("2026-11-27T09:00:24")
+        poll("2026-11-27T09:00:25", glass, apple)
+        poll("2026-11-27T10:15:00")
+        poll("2026-11-27T10:30:00", glass)
+        poll("2026-11-27T13:30:00", glass, apple)
+        poll("2026-11-27T21:00:00", glass, apple)
+        poll("2026-11-28T00:59:00", apple)
+        poll("2026-11-28T01:00:00")
+        poll("2026-11-30T00:59:00")
+        poll("2026-09-30T21:00:00")
+        poll("2026-10-01T09:00:00")
+        poll("2027-01-04T09:00:00", apple)
+        assertTrue(restored.setRefreshHours(apple, ""))
+        poll("2027-01-05T09:00:00")
+        restored.requestAll()
+        poll("2027-01-05T09:01:00", glass, apple, "nf_AP2701")
+    }
+
+    @Test fun invalidSavedHoursFallBackToTheBuiltInSchedule() {
+        val watch = WatchBook(MarketSessions::interval)
+        val glass = SavedItem().apply { code = "nf_FG2705"; refreshHours = "bad data" }
+        val stock = SavedItem().apply { code = "sh600000"; refreshHours = "21:00-02:00" }
+        watch.restore(SavedWatchlist().apply { items.addAll(listOf(glass, stock)) })
+        assertTrue(watch.view().rows.all { it.refreshHours == null })
+        assertFalse(watch.setRefreshHours(stock.code, "21:00-02:00"))
+        val night = Instant.parse("2026-11-26T13:00:00Z")
+        assertEquals(listOf(glass.code), watch.reserve(night).map { it.symbol.code })
+    }
 }

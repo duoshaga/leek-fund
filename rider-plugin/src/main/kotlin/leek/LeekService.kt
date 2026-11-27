@@ -28,9 +28,33 @@ import java.util.concurrent.atomic.AtomicBoolean
 class LeekService(scope: CoroutineScope) : PersistentStateComponent<SavedWatchlist> {
     private val book = WatchBook(MarketSessions::interval)
     private val source: QuoteSource = MarketQuoteSource()
+    private val hoursSource = DomesticHoursSource()
     private val wake = Channel<Unit>(Channel.CONFLATED)
+    private val hoursWake = Channel<Unit>(Channel.CONFLATED)
     private val listeners = CopyOnWriteArrayList<() -> Unit>()
     private val updatePending = AtomicBoolean()
+
+    // Directory and contract requests have their own worker so a slow lookup cannot delay quotes.
+    private val hoursWorker = scope.launch(start = CoroutineStart.LAZY) {
+        while (isActive) {
+            val now = Instant.now()
+            val request = book.reserveHours(now)
+            if (request == null) {
+                withTimeoutOrNull(60_000L) { hoursWake.receive() }
+                continue
+            }
+            val hours = try {
+                runInterruptible(Dispatchers.IO) { hoursSource.fetch(request.product, now) }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            }
+            book.completeHours(request, hours, Instant.now())
+            wake.trySend(Unit)
+            publish()
+        }
+    }
 
     // All project windows share this worker, including when every sidebar is collapsed.
     private val worker = scope.launch(start = CoroutineStart.LAZY) {
@@ -59,6 +83,7 @@ class LeekService(scope: CoroutineScope) : PersistentStateComponent<SavedWatchli
     override fun getState() = book.save()
     override fun loadState(state: SavedWatchlist) {
         book.restore(state)
+        hoursWake.trySend(Unit)
         wake.trySend(Unit)
         publish()
     }
@@ -66,6 +91,7 @@ class LeekService(scope: CoroutineScope) : PersistentStateComponent<SavedWatchli
     fun add(symbol: Symbol, displayName: String? = null): Boolean {
         val added = book.add(symbol, displayName)
         if (added) {
+            hoursWake.trySend(Unit)
             wake.trySend(Unit)
             publish()
         }
@@ -90,13 +116,22 @@ class LeekService(scope: CoroutineScope) : PersistentStateComponent<SavedWatchli
 
     fun refresh() {
         book.requestAll()
+        hoursWake.trySend(Unit)
         wake.trySend(Unit)
+    }
+
+    fun setRefreshHours(code: String, text: String): Boolean {
+        if (!book.setRefreshHours(code, text)) return false
+        wake.trySend(Unit)
+        publish()
+        return true
     }
 
     internal fun subscribe(parent: Disposable, listener: () -> Unit) {
         listeners.add(listener)
         Disposer.register(parent, Disposable { listeners.remove(listener) })
         worker.start()
+        hoursWorker.start()
         publish()
     }
 

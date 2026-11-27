@@ -1,0 +1,37 @@
+{
+  "archive": "dist/leekbox-rider-1.0.5.zip",
+  "sha256": "2c46e90397995add59c3d6b4119c3d80757f5847d7e0ae7a0384c875fb39768c",
+  "rider": "RD-263.7307.355",
+  "pluginVerifier": "Compatible",
+  "unitTests": {
+    "tests": 42,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "liveVerifiedAt": "2026-11-26T09:02:02.695138800Z",
+  "initialRows": {
+    "nf_FG2705": "⌃  +0.22%  911  玻璃2705  nf_FG2705  ·  15:00:00",
+    "nf_AP2705": "⌃  +1.26%  5460  苹果2705  nf_AP2705  ·  15:00:00  ·  仅手动刷新"
+  },
+  "automatic": {
+    "code": "nf_AP2705",
+    "first": "2026-11-26T09:01:37.330102300Z",
+    "second": "2026-11-26T09:02:02.447929200Z",
+    "gapMillis": 25117
+  },
+  "restartVerifiedAt": "2026-11-26T09:02:47.901172800Z",
+  "restoredAndCleared": {
+    "code": "nf_AP2705",
+    "savedHours": "00:00-12:00, 12:00-24:00",
+    "clearedRow": "⌃  +1.26%  5460  苹果2705  nf_AP2705  ·  15:00:00  ·  仅手动刷新"
+  },
+  "updateVerifiedAt": "2026-11-26T09:04:39.814070300Z",
+  "updateFrom": "1.0.4",
+  "updateTo": "1.0.5",
+  "downloadedZipMatched": true,
+  "screenshots": [
+    "refresh-hours-sidebar.png",
+    "refresh-hours-editor.png"
+  ]
+}

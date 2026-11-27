@@ -55,6 +55,17 @@ internal object QuoteText {
         availability(row)?.let { append("  ·  ").append(it) }
     }
 
+    fun refreshNote(row: WatchRow, compact: Boolean): String? {
+        row.refreshHours?.let { return if (compact) "自定义时段" else "自定义刷新时段（北京时间）  ${it.text}" }
+        if (row.symbol.group == Group.DOMESTIC && row.marketHours == null && MarketSessions.builtInHours(row.symbol) == null) {
+            if (row.hoursLookupFailed) return if (compact) "时段待重试" else "暂未查到交易时段，插件会自动重试。也可点击时钟手填时段。"
+            return if (compact) "查询时段中" else "正在查询该品种的交易时段。"
+        }
+        val reason = MarketSessions.manualOnlyReason(row.symbol, Instant.now(), row.marketHours)
+        if (reason != null) return if (compact) "仅手动刷新" else reason
+        return if (compact) null else row.marketHours?.let { "自动刷新时段（北京时间，东方财富期货）  ${it.text}" }
+    }
+
     fun detail(row: WatchRow): String = buildList {
         val name = row.quote?.name?.takeUnless { it.isBlank() || it == row.symbol.code } ?: row.displayName
         add(listOfNotNull(name, row.symbol.code).joinToString("  "))
@@ -79,7 +90,7 @@ internal object QuoteText {
             if (it.bidFallback) add("源成交价  " + (it.rawTrade?.toPlainString() ?: DASH))
         }
         availability(row)?.let(::add)
-        MarketSessions.manualOnlyReason(row.symbol, Instant.now())?.let(::add)
+        refreshNote(row, compact = false)?.let(::add)
     }.joinToString("\n")
 
     fun html(text: String) = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")

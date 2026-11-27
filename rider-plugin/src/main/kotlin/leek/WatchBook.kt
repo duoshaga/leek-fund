@@ -16,16 +16,19 @@ internal val Symbol.watchGroup: WatchGroup get() = when (group) {
     Group.OVERSEAS -> WatchGroup.OVERSEAS
 }
 
-data class WatchRow(val symbol: Symbol, val quote: Quote?, val state: QuoteState, val received: Instant?, val displayName: String? = null)
+data class WatchRow(val symbol: Symbol, val quote: Quote?, val state: QuoteState, val received: Instant?,
+                    val displayName: String? = null, val refreshHours: DomesticRefreshHours? = null,
+                    val marketHours: DomesticRefreshHours? = null, val hoursLookupFailed: Boolean = false)
 data class WatchView(val rows: List<WatchRow>, val pin: String?, val groupOrder: List<WatchGroup>) {
     val pinned: WatchRow? get() = rows.firstOrNull { it.symbol.code == pin }
 }
 
 internal data class Request(val symbol: Symbol, val id: Long)
+internal data class HoursRequest(val product: String, val id: Long)
 
 /** A reservation belongs to a particular list entry. Removing and re-adding the same code
  * while its HTTP request is in flight cannot deliver that old response to the new entry. */
-internal class WatchBook(private val interval: (Symbol, Instant) -> Duration?) {
+internal class WatchBook(private val interval: (WatchRow, Instant) -> Duration?) {
     private class Entry(var row: WatchRow) {
         var requested = false
         var active: Long? = null
@@ -33,21 +36,45 @@ internal class WatchBook(private val interval: (Symbol, Instant) -> Duration?) {
     }
 
     private var entries = linkedMapOf<String, Entry>()
+    private class ProductSchedule {
+        var hours: DomesticRefreshHours? = null
+        var fetchedAt: Instant? = null
+        var lastAttempt: Instant? = null
+        var failed = false
+        var active: Long? = null
+    }
+    private val schedules = linkedMapOf<String, ProductSchedule>()
     private val groupOrder = WatchGroup.entries.toMutableList()
     private var pin: String? = null
     private var sequence = 0L
 
-    @Synchronized fun view() = WatchView(entries.values.map { it.row }, pin, groupOrder.toList())
+    private fun withSchedule(row: WatchRow): WatchRow {
+        val schedule = schedules[row.symbol.domesticProduct] ?: return row
+        if (schedule.hours == null && !schedule.failed) return row
+        return row.copy(marketHours = schedule.hours, hoursLookupFailed = schedule.failed)
+    }
+
+    @Synchronized fun view() = WatchView(entries.values.map { withSchedule(it.row) }, pin, groupOrder.toList())
 
     @Synchronized fun add(symbol: Symbol, displayName: String? = null): Boolean {
         if (symbol.code in entries) return false
         entries[symbol.code] = Entry(WatchRow(symbol, null, QuoteState.NEW, null, displayName)).apply { requested = true }
+        symbol.domesticProduct?.let { schedules.getOrPut(it, ::ProductSchedule) }
         return true
     }
 
     @Synchronized fun remove(code: String) {
-        entries.remove(code)
+        val product = entries.remove(code)?.row?.symbol?.domesticProduct
+        if (product != null && entries.values.none { it.row.symbol.domesticProduct == product }) schedules.remove(product)
         if (pin == code) pin = null
+    }
+
+    @Synchronized fun setRefreshHours(code: String, text: String): Boolean {
+        val entry = entries[code] ?: return false
+        if (entry.row.symbol.group != Group.DOMESTIC) return false
+        val hours = if (text.isBlank()) null else DomesticRefreshHours.parse(text) ?: return false
+        entry.row = entry.row.copy(refreshHours = hours)
+        return true
     }
 
     @Synchronized fun moveGroup(group: WatchGroup, anchor: WatchGroup, after: Boolean) =
@@ -74,13 +101,39 @@ internal class WatchBook(private val interval: (Symbol, Instant) -> Duration?) {
 
     @Synchronized fun requestAll() {
         entries.values.filter { it.active == null }.forEach { it.requested = true }
+        schedules.values.filter { it.failed }.forEach { it.lastAttempt = null }
+    }
+
+    @Synchronized fun reserveHours(now: Instant): HoursRequest? {
+        for ((product, schedule) in schedules) {
+            if (schedule.active != null) continue
+            val last = schedule.lastAttempt
+            val ttl = if (schedule.failed) HOURS_RETRY else HOURS_TTL
+            if (last != null && now >= last && Duration.between(last, now) < ttl) continue
+            val request = HoursRequest(product, ++sequence)
+            schedule.active = request.id
+            return request
+        }
+        return null
+    }
+
+    @Synchronized fun completeHours(request: HoursRequest, hours: DomesticRefreshHours?, now: Instant) {
+        val schedule = schedules[request.product] ?: return
+        if (schedule.active != request.id) return
+        schedule.active = null
+        schedule.lastAttempt = now
+        schedule.failed = hours == null
+        if (hours != null) {
+            schedule.hours = hours
+            schedule.fetchedAt = now
+        }
     }
 
     @Synchronized fun reserve(now: Instant): List<Request> = entries.values.mapNotNull { entry ->
         if (entry.active != null) return@mapNotNull null
         val symbol = entry.row.symbol
         if (!entry.requested) {
-            val cadence = interval(symbol, now) ?: return@mapNotNull null
+            val cadence = interval(withSchedule(entry.row), now) ?: return@mapNotNull null
             val last = entry.lastAttempt
             if (last != null && now >= last && now < last.plus(cadence)) return@mapNotNull null
         }
@@ -107,18 +160,41 @@ internal class WatchBook(private val interval: (Symbol, Instant) -> Duration?) {
         saved.pinnedCode = pin
         saved.groupOrder = groupOrder.map { it.name }.toMutableList()
         saved.items = entries.values.map { SavedItem.from(it.row) }.toMutableList()
+        saved.marketSchedules = schedules.mapNotNull { (product, schedule) ->
+            val hours = schedule.hours ?: return@mapNotNull null
+            SavedMarketSchedule().also {
+                it.product = product
+                it.hours = hours.text
+                it.fetchedAt = schedule.fetchedAt.toString()
+            }
+        }.toMutableList()
     }
 
     @Synchronized fun restore(saved: SavedWatchlist) {
         entries.clear()
+        schedules.clear()
         groupOrder.clear()
         val known = WatchGroup.entries.associateBy { it.name }
         groupOrder.addAll((saved.groupOrder.mapNotNull(known::get) + WatchGroup.entries).distinct())
         for (item in saved.items) {
             val row = item.toRow() ?: continue
             entries.putIfAbsent(row.symbol.code, Entry(row))
+            row.symbol.domesticProduct?.let { schedules.getOrPut(it, ::ProductSchedule) }
+        }
+        for (item in saved.marketSchedules) {
+            val schedule = schedules[item.product] ?: continue
+            val hours = DomesticRefreshHours.parse(item.hours) ?: continue
+            val at = runCatching { Instant.parse(item.fetchedAt) }.getOrNull() ?: continue
+            schedule.hours = hours
+            schedule.fetchedAt = at
+            schedule.lastAttempt = at
         }
         pin = saved.pinnedCode?.takeIf { it in entries }
+    }
+
+    private companion object {
+        val HOURS_RETRY = Duration.ofMinutes(5)
+        val HOURS_TTL = Duration.ofDays(1)
     }
 }
 
@@ -138,11 +214,19 @@ class SavedWatchlist {
     var items: MutableList<SavedItem> = mutableListOf()
     var pinnedCode: String? = null
     var groupOrder: MutableList<String> = mutableListOf()
+    var marketSchedules: MutableList<SavedMarketSchedule> = mutableListOf()
+}
+
+class SavedMarketSchedule {
+    var product = ""
+    var hours = ""
+    var fetchedAt = ""
 }
 
 class SavedItem {
     var code = ""
     var displayName: String? = null
+    var refreshHours: String? = null
     var name: String? = null
     var price: String? = null
     var percent: String? = null
@@ -173,13 +257,15 @@ class SavedItem {
             received != null -> QuoteState.EMPTY
             else -> QuoteState.NEW
         }
-        return WatchRow(symbol, quote, state, received, displayName)
+        val hours = if (symbol.group == Group.DOMESTIC) refreshHours?.let(DomesticRefreshHours::parse) else null
+        return WatchRow(symbol, quote, state, received, displayName, hours)
     }
 
     companion object {
         fun from(row: WatchRow) = SavedItem().apply {
             code = row.symbol.code
             displayName = row.displayName
+            refreshHours = row.refreshHours?.text
             receivedAt = row.received?.toString()
             row.quote?.let {
                 name = it.name

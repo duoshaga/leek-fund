@@ -4,6 +4,8 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.InputValidatorEx
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBLabel
@@ -20,7 +22,6 @@ import java.awt.Dimension
 import java.awt.Font
 import java.awt.Graphics
 import java.awt.event.MouseEvent
-import java.time.Instant
 import java.util.function.Supplier
 import javax.swing.BoxLayout
 import javax.swing.DropMode
@@ -74,6 +75,7 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
         selected()?.let { service.remove(it.code) }
     }
     private val refresh = button("刷新", "refresh", AllIcons.Actions.Refresh) { service.refresh() }
+    private val hours = button("设置自动刷新时段", "hours", AllIcons.General.History) { editRefreshHours() }
     private var rows = emptyMap<String, WatchRow>()
     private var pinnedCode: String? = null
     private var selectAfterAdd: String? = null
@@ -90,6 +92,7 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
             add(pin)
             add(remove)
             add(refresh)
+            add(hours)
         }
         val entry = JPanel(BorderLayout(JBUI.scale(3), 0)).apply {
             add(input, BorderLayout.CENTER)
@@ -159,11 +162,27 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
     private fun symbolAt(path: TreePath?) =
         (path?.lastPathComponent as? DefaultMutableTreeNode)?.userObject as? Symbol
 
+    private fun editRefreshHours() {
+        val row = rows[selected()?.code] ?: return
+        val validator = object : InputValidatorEx {
+            override fun getErrorText(inputString: String): String? =
+                if (inputString.isBlank() || DomesticRefreshHours.parse(inputString) != null) null
+                else "请输入有效且互不重叠的时段，例如 09:00-10:15, 21:00-01:00"
+        }
+        val text = Messages.showInputDialog(this,
+            "<html>按北京时间填写，多个时段用逗号分隔。跨午夜可填 21:00-01:00。<br>" +
+                "按周一至周五运行，跳过已收录的节假日。留空恢复默认。</html>",
+            "自动刷新时段 · ${row.symbol.code}", null, row.refreshHours?.text.orEmpty(), validator,
+            null, row.marketHours?.let { "已查询到的时段　${it.text}" } ?: "09:00-10:15, 10:30-11:30, 13:30-15:00, 21:00-23:00") ?: return
+        service.setRefreshHours(row.symbol.code, text)
+    }
+
     private fun updateButtons() {
         val code = selected()?.code
         pin.isEnabled = code != null
         remove.isEnabled = code != null
         refresh.isEnabled = rows.isNotEmpty()
+        hours.isEnabled = selected()?.group == Group.DOMESTIC
         val pinned = code != null && code == pinnedCode
         pin.icon = if (pinned) AllIcons.General.PinSelected else AllIcons.General.Pin
         pin.toolTipText = if (pinned) "取消固定" else "固定到状态栏"
@@ -272,7 +291,7 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
                     if (item.group == Group.FUND) it else it.substringAfterLast(' ')
                 }
                 tail.text = listOfNotNull(item.code, sourceTime,
-                    QuoteText.availability(entry), MarketSessions.manualOnlyReason(item, Instant.now())?.let { "仅手动刷新" })
+                    QuoteText.availability(entry), QuoteText.refreshNote(entry, compact = true))
                     .joinToString("  ·  ")
                 line.accessibleContext.accessibleName = listOf(percent.text, price.text, title.text, tail.text).joinToString("  ")
                 return line

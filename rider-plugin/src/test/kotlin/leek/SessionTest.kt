@@ -65,6 +65,35 @@ class SessionTest {
         day(au, "2026-11-27T01:00", "2026-11-27")
     }
 
+    @Test fun glassContinuousAndMonthlyFollowZhengzhouSessions() {
+        for (code in listOf("nf_FG2705", "nf_FG0")) {
+            val glass = Symbol.parse(code)!!
+            day(glass, "2026-11-26T09:00", "2026-11-26")
+            day(glass, "2026-11-26T10:15", null)
+            day(glass, "2026-11-26T10:30", "2026-11-26")
+            day(glass, "2026-11-26T11:30", null)
+            day(glass, "2026-11-26T13:30", "2026-11-26")
+            day(glass, "2026-11-26T15:00", null)
+            assertNull(MarketSessions.manualOnlyReason(glass, at("2026-11-26T15:00")))
+            day(glass, "2026-11-27T21:00", "2026-11-30")
+            assertEquals(Duration.ofSeconds(25), MarketSessions.interval(glass, at("2026-11-27T22:59")))
+            day(glass, "2026-11-27T23:00", null)
+            day(glass, "2026-11-28T21:00", null)
+            day(glass, "2026-09-30T21:00", null)
+            day(glass, "2026-10-01T09:00", null)
+            assertNotNull(MarketSessions.manualOnlyReason(glass, at("2026-12-31T21:00")))
+        }
+    }
+
+    @Test fun customHoursParseClockBoundariesAndRejectAmbiguousWindows() {
+        assertEquals("09:00-10:15, 21:00-01:00", DomesticRefreshHours.parse(" 9:00 - 10:15，21:00-01:00 ")?.text)
+        assertEquals("00:00-24:00", DomesticRefreshHours.parse("00:00-24:00")?.text)
+        for (invalid in listOf("", "9点-10点", "09:60-10:15", "24:00-01:00", "09:00-24:01",
+            "09:30-09:30", "09:00-10:00,", "09:00-11:00,10:30-11:30", "21:00-01:00,00:00-02:00")) {
+            assertNull(DomesticRefreshHours.parse(invalid), invalid)
+        }
+    }
+
     @Test fun hongKongCashSharesUseLocalLunchHalfDayAndHolidays() {
         day(hongKong, "2026-02-16T12:05", "2026-02-16")
         day(hongKong, "2026-02-16T13:00", null)

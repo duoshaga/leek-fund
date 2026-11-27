@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 
 class QuoteTraffic extends ProxySelector {
-    static final hosts = ['hq.sinajs.cn', 'qt.gtimg.cn', 'api.fund.eastmoney.com', 'fundsuggest.eastmoney.com'] as Set
+    static final hosts = ['hq.sinajs.cn', 'qt.gtimg.cn', 'api.fund.eastmoney.com', 'fundsuggest.eastmoney.com', 'futsse-static.eastmoney.com'] as Set
     final offline = new AtomicBoolean(false)
     final requests = new CopyOnWriteArrayList()
     final files = new CopyOnWriteArrayList()
@@ -71,7 +71,8 @@ class QuoteTraffic extends ProxySelector {
                 connection.readTimeout = 7000
                 connection.setRequestProperty('User-Agent','Mozilla/5.0')
                 def referer = ['hq.sinajs.cn': 'https://finance.sina.com.cn/', 'qt.gtimg.cn': 'https://gu.qq.com/',
-                               'api.fund.eastmoney.com': 'https://fundf10.eastmoney.com/', 'fundsuggest.eastmoney.com': 'https://fund.eastmoney.com/']
+                               'api.fund.eastmoney.com': 'https://fundf10.eastmoney.com/', 'fundsuggest.eastmoney.com': 'https://fund.eastmoney.com/',
+                               'futsse-static.eastmoney.com': 'https://quote.eastmoney.com/']
                 connection.setRequestProperty('Referer', referer[uri.host])
                 if (connection.responseCode == 200) new File(folder, sample.file).bytes = connection.inputStream.withCloseable { it.readNBytes(524289) }
                 sample.status = connection.responseCode
@@ -166,6 +167,22 @@ def rowTexts(pane) {
         }
     }
     return rows
+}
+
+def hoursDialog(pane, String code) {
+    edt {
+        selectCode(pane, code)
+        def button = child(pane, 'leek.hours')
+        assert button?.enabled
+        SwingUtilities.invokeLater { button.doClick(0) }
+    }
+    awaitValue('hours editor for ' + code) { edt {
+        def dialog = java.awt.Window.windows.find { it instanceof JDialog && it.showing && it.title == '自动刷新时段 · ' + code }
+        if (!dialog) return null
+        def field = UIUtil.uiTraverser(dialog).filter(JTextField).find { it.showing && it.editable }
+        def ok = dialog.rootPane.defaultButton
+        field && ok ? [field: field, ok: ok, pane: dialog.rootPane] : null
+    }}
 }
 def grab(service) {
     def view = service.view()
@@ -345,7 +362,7 @@ def profile = Path.of(PathManager.configPath).toAbsolutePath().parent
 assert profile == Path.of(System.getProperty('leek.qa.profile')).toAbsolutePath().normalize()
 assert !app.headlessEnvironment
 def phase = profile.resolve('phase.txt').toFile().getText('UTF-8').trim()
-assert phase in ['live', 'restart', 'monthly', 'close', 'fuzzy', 'index-search', 'appearance', 'watch-order', 'order-restart', 'update-source']
+assert phase in ['live', 'restart', 'monthly', 'close', 'fuzzy', 'index-search', 'appearance', 'watch-order', 'order-restart', 'update-source', 'refresh-hours', 'hours-restart', 'hours-legacy', 'hours-discovery', 'hours-cache']
 def evidence = repo.resolve('rider-plugin/build/acceptance').toFile()
 def json = new GsonBuilder().setPrettyPrinting().serializeNulls().create()
 
@@ -418,7 +435,100 @@ Thread.startDaemon('LeekBox real Rider acceptance') {
         def pane = panel(project)
         awaitValue('installed native status widget') { edt { widget(project)?.presentation } }
         def codes = ['sh600000','hk00700','000001','161725','nf_IF0','nf_RB0','nf_RB2701','hf_OIL','hf_CHA50CFD']
-        if (phase in ['watch-order', 'order-restart']) {
+        if (phase == 'hours-legacy') {
+            if (!grab(service).containsKey('nf_LC2705')) addCode(pane, 'nf_LC2705')
+            awaitValue('old lithium quote') { grab(service)['nf_LC2705']?.state == 'CURRENT' }
+            def text = edt { rowTexts(pane)['nf_LC2705'] }
+            assert text.contains('仅手动刷新')
+            check('baseline', text)
+        } else if (phase in ['hours-discovery', 'hours-cache']) {
+            def day = '09:00-10:15, 10:30-11:30, 13:30-15:00'
+            def expected = [nf_LC2705:day, nf_LC0:day, nf_AG2612:day + ', 21:00-02:30',
+                nf_PR2705:day + ', 21:00-23:00', nf_T2703:'09:30-11:30, 13:00-15:15']
+            def snapshot = { service.state.marketSchedules.collectEntries { [(it.product): [hours: it.hours, fetched: it.fetchedAt]] } }
+            assert grab(service).containsKey('nf_LC2705') : 'A previously saved lithium contract is required'
+            if (phase == 'hours-discovery') {
+                awaitValue('old watch automatically resolves lithium', 90) { snapshot()['LC']?.hours == day }
+                def lithiumFetched = snapshot()['LC'].fetched
+                expected.keySet().findAll { it != 'nf_LC2705' }.each { code ->
+                    if (!grab(service).containsKey(code)) addCode(pane, code)
+                }
+                awaitValue('online sessions for all added products', 120) {
+                    def rows = service.view().rows.collectEntries { [(it.symbol.code):it.marketHours?.text] }
+                    expected.every { code, hours -> rows[code] == hours }
+                }
+                assert snapshot()['LC'].fetched == lithiumFetched
+                for (key in ['113_ag_info','115_pr_info','220_t_info']) {
+                    assert meter.requests.count { it.url.endsWith('msgid=' + key) } == 1 : key
+                }
+            } else {
+                def prior = json.fromJson(new File(evidence, 'hours-discovery.json').getText('UTF-8'), Map)
+                assert prior.ok && snapshot() == prior.checks.cache
+                assert meter.requests.every { !it.url.contains('futsse-static.eastmoney.com') }
+            }
+            def tips = edt {
+                expected.collectEntries { code, hours ->
+                    selectCode(pane, code)
+                    def tip = child(pane, 'leek.sourceTime').toolTipText
+                    assert tip.contains('东方财富期货') && tip.contains(hours) : tip
+                    assert !rowTexts(pane)[code].contains('仅手动刷新')
+                    [(code): hours]
+                }
+            }
+            check('onlineWindows', tips)
+            check('cache', snapshot())
+            if (phase == 'hours-discovery') {
+                def calendar = descriptor.pluginClassLoader.loadClass('leek.MarketSessions').getField('INSTANCE').get(null)
+                def rows = service.view().rows.collectEntries { [(it.symbol.code):it] }
+                def cadence = { code, local -> calendar.interval(rows[code], java.time.OffsetDateTime.parse(local + '+08:00').toInstant())?.seconds }
+                def observed = [lithiumOpen:cadence('nf_LC2705','2026-11-26T09:00:00'),
+                    lithiumBreak:cadence('nf_LC2705','2026-11-26T10:15:00'), lithiumNight:cadence('nf_LC2705','2026-11-26T21:00:00'),
+                    silverAfterMidnight:cadence('nf_AG2612','2026-11-28T01:00:00'), bottleClose:cadence('nf_PR2705','2026-11-27T23:00:00'),
+                    treasuryAfternoon:cadence('nf_T2703','2026-11-27T15:10:00')]
+                assert observed == [lithiumOpen:25L, lithiumBreak:null, lithiumNight:null, silverAfterMidnight:25L, bottleClose:null, treasuryAfternoon:25L]
+                check('clockReplaySeconds', observed)
+                edt { selectCode(pane, 'nf_LC2705'); paintComponent(pane, new File(evidence, 'hours-discovery.png')) }
+            }
+        } else if (phase in ['refresh-hours', 'hours-restart']) {
+            def glass = 'nf_FG2705', apple = 'nf_AP2705'
+            def saved = '00:00-12:00, 12:00-24:00'
+            if (phase == 'refresh-hours') {
+                [glass, apple].each { code ->
+                    if (grab(service).containsKey(code)) service.remove(code)
+                    addCode(pane, code)
+                }
+                awaitValue('both source quotes') { [glass, apple].every { grab(service)[it]?.state == 'CURRENT' } }
+                def initial = edt { rowTexts(pane) }
+                assert initial[glass].contains(glass) && !initial[glass].contains('仅手动刷新')
+                assert initial[apple].contains('仅手动刷新')
+                check('initialRows', initial)
+                def editor = hoursDialog(pane, apple)
+                edt { editor.field.text = '09:00-25:00' }
+                awaitValue('invalid hours disable save') { edt { !editor.ok.enabled } }
+                edt { editor.field.text = '00:00-12:00，12:00-24:00' }
+                awaitValue('valid hours enable save') { edt { editor.ok.enabled } }
+                edt { paintComponent(editor.pane, new File(evidence, 'refresh-hours-editor.png')); editor.ok.doClick(0) }
+                awaitValue('custom hours on row') { edt { rowTexts(pane)[apple]?.contains('自定义时段') } }
+                def baseline = grab(service)[apple].received
+                def first = awaitValue('first automatic quote') { def q = grab(service)[apple]; q.state == 'CURRENT' && q.received != baseline ? q : null }
+                def second = awaitValue('second automatic quote') { def q = grab(service)[apple]; q.state == 'CURRENT' && q.received != first.received ? q : null }
+                def gap = java.time.Duration.between(Instant.parse(first.received), Instant.parse(second.received)).toMillis()
+                assert gap >= 25000
+                check('automatic', [code: apple, first: first.received, second: second.received, gapMillis: gap])
+                edt { paintComponent(pane, new File(evidence, 'refresh-hours-sidebar.png')) }
+            } else {
+                def rows = edt { rowTexts(pane) }
+                assert rows[apple]?.contains('自定义时段') && rows[glass] && !rows[glass].contains('仅手动刷新')
+                def editor = hoursDialog(pane, apple)
+                def persisted = edt { editor.field.text }
+                assert persisted == saved
+                edt { editor.field.text = '' }
+                awaitValue('blank restores default') { edt { editor.ok.enabled } }
+                edt { editor.ok.doClick(0) }
+                def cleared = awaitValue('row restored to default') { edt { def text = rowTexts(pane)[apple]; text?.contains('仅手动刷新') ? text : null } }
+                check('restoredAndCleared', [code: apple, savedHours: persisted, clearedRow: cleared])
+            }
+        } else if (phase in ['watch-order', 'order-restart']) {
             def tree = child(pane, 'leek.watchlist')
             def finalOrder = [DOMESTIC:['nf_FG2705','nf_AO2702'], MAINLAND:['sh000001','sz002384'],
                               HONG_KONG:['hk00700'], OVERSEAS:[], FUND:[]]

@@ -1,0 +1,67 @@
+{
+  "archive": "dist/leekbox-rider-1.0.6.zip",
+  "sha256": "e2debafba8bb0606c095d97e1ec7e4cd3f8178000bb9efdd4bce32d26f9c3d1b",
+  "rider": "RD-263.7307.355",
+  "pluginVerifier": "Compatible",
+  "unitTests": {
+    "tests": 47,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "onlineProducts": {
+    "matched": 84,
+    "missing": 0,
+    "results": "online-products.json",
+    "sourceDirectory": "https://futsse-static.eastmoney.com/redis?msgid=gnweb"
+  },
+  "previousVersionRow": "⌄  -3.44%  80400  碳酸锂2705  nf_LC2705  ·  15:03:52  ·  仅手动刷新",
+  "realRider": {
+    "verifiedAt": "2026-11-26T09:35:11.976319900Z",
+    "onlineWindows": {
+      "nf_LC2705": "09:00-10:15, 10:30-11:30, 13:30-15:00",
+      "nf_LC0": "09:00-10:15, 10:30-11:30, 13:30-15:00",
+      "nf_AG2612": "09:00-10:15, 10:30-11:30, 13:30-15:00, 21:00-02:30",
+      "nf_PR2705": "09:00-10:15, 10:30-11:30, 13:30-15:00, 21:00-23:00",
+      "nf_T2703": "09:30-11:30, 13:00-15:15"
+    },
+    "observedContractInfoRequests": [
+      "https://futsse-static.eastmoney.com/redis?msgid=113_ag_info",
+      "https://futsse-static.eastmoney.com/redis?msgid=115_pr_info",
+      "https://futsse-static.eastmoney.com/redis?msgid=220_t_info"
+    ],
+    "clockReplaySeconds": {
+      "lithiumOpen": 25,
+      "lithiumBreak": null,
+      "lithiumNight": null,
+      "silverAfterMidnight": 25,
+      "bottleClose": null,
+      "treasuryAfternoon": 25
+    },
+    "cacheAfterRestart": {
+      "LC": {
+        "hours": "09:00-10:15, 10:30-11:30, 13:30-15:00",
+        "fetched": "2026-11-26T09:35:00.406894800Z"
+      },
+      "AG": {
+        "hours": "09:00-10:15, 10:30-11:30, 13:30-15:00, 21:00-02:30",
+        "fetched": "2026-11-26T09:35:11.397986700Z"
+      },
+      "PR": {
+        "hours": "09:00-10:15, 10:30-11:30, 13:30-15:00, 21:00-23:00",
+        "fetched": "2026-11-26T09:35:11.442837200Z"
+      },
+      "T": {
+        "hours": "09:30-11:30, 13:00-15:15",
+        "fetched": "2026-11-26T09:35:11.477721200Z"
+      }
+    },
+    "restartVerifiedAt": "2026-11-26T09:36:13.524680600Z",
+    "screenshot": "hours-discovery.png"
+  },
+  "update": {
+    "fromVersion": "1.0.5",
+    "toVersion": "1.0.6",
+    "downloadedZipMatched": true
+  }
+}
