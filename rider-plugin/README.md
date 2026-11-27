@@ -1,18 +1,34 @@
 # 韭菜盒子 · Rider
 
-LeekBox 1.0.7 在 Rider 侧栏中将自选分为 A 股、港股、基金、国内期货和海外期货。每行并排显示涨跌幅、价格和名称，选中项用粗体标识。已验证 Windows 版 Rider 2026.3.0.2（RD-263.7307.355）。
+LeekBox 1.0.11 在 Rider 侧栏中将自选分为 A 股、港股、基金、国内期货和海外期货。双击品种可在列表下方查看价格主图、均线和成交量。已验证 Windows 版 Rider 2026.3.0.2（RD-263.7307.355）。
 
 ## 安装与使用
 
 1. 在 Rider 按 `Ctrl+Alt+S`，打开 **Plugins → ⚙ → Manage Plugin Repositories…**，添加 `file:///J:/Tools/Leek/rider-plugin/dist/updatePlugins.xml`。如果工程在其他目录，请填写该目录中 [updatePlugins.xml](dist/updatePlugins.xml) 的文件 URL。
-2. 在插件页搜索 **LeekBox**，从该仓库安装。已从磁盘安装的用户，在 **Installed → LeekBox → Additional Info → Updates from** 选择同一仓库，即可从插件页更新。[1.0.7 安装包](dist/leekbox-rider-1.0.7.zip) · [Rider 更新来源说明](https://www.jetbrains.com/help/rider/Managing_Plugins.html)
+2. 在插件页搜索 **LeekBox**，从该仓库安装。已从磁盘安装的用户，在 **Installed → LeekBox → Additional Info → Updates from** 选择同一仓库，即可从插件页更新。[1.0.11 安装包](dist/leekbox-rider-1.0.11.zip) · [Rider 更新来源说明](https://www.jetbrains.com/help/rider/Managing_Plugins.html)
 3. 从 **View → Tool Windows → 韭菜盒子** 打开右侧面板。输入 `AO` 或「氧化铝」，直接点击「氧化铝2702 · nf_AO2702」，也可用方向键选择后按回车。完整代码如 `nf_RB2701` 可直接回车添加。输入 `sh000001` 或「上证指数」可找到上证指数，输入 `000001` 可在上证指数、平安银行和华夏成长混合之间选择。
 4. 选中一行，点图钉将其固定到状态栏。点击底部报价可以重新打开侧栏。圆形箭头刷新全部自选，减号删除选中项。
-5. 上下拖动分组标题可调整五个分组的顺序。拖动标的到同组另一行的上半部或下半部，松开后放在该行之前或之后。刷新和重启 Rider 都会保留顺序。
+5. 单击分组标题行的任意位置可展开或收起该组，上下拖动标题可调整分组顺序。拖动标的到同组另一行的上半部或下半部，松开后放在该行之前或之后。刷新和重启 Rider 都会保留顺序。
 6. 添加国内期货或打开已有自选时，插件会按品种从东方财富期货查询交易时段。悬停合约可查看北京时间的日盘、夜盘及来源。连续合约和不同月份共用查询结果，重启后也可使用缓存。
 7. 要覆盖某个合约的自动安排，选中它并点击刷新箭头右侧的时钟，按北京时间输入，例如 `09:00-10:15, 10:30-11:30, 13:30-15:00, 21:00-01:00`。手填设置随自选保留，清空即可恢复自动安排。
 
 首次使用时自选为空。在同一 Rider 实例的各项目窗口中，自选、固定项和报价共享。Rider 重启后会恢复自选、固定项和已缓存的源报价。
+
+## K 线、均线与成交量
+
+双击自选中的股票、指数、场内 ETF 或期货，在列表下方打开 K 线。图表打开后，单击其他品种可切换图表。周期菜单可切换 **5、15、30、60、120 分钟、日 K、周 K**。红柱表示收高，绿柱表示收低，下方的量柱与对应 K 线上下对齐。拖动列表与图表间的分隔线可调整高度。
+
+鼠标移入主图时，十字线对齐所指 K 线，右轴显示指针价格，底轴显示时间。移到量柱上，右轴读数切换为成交量。青色价标显示最新报价，缺少可用报价时显示最新一根的收盘价。图例按 `MA20: 价格` 显示每条均线，随悬停切换到该根，移出后显示最新值。
+
+详情框自动停靠在鼠标对侧，显示所指 K 线的开高低收、成交量、成交额，以及相对前一根收盘价的涨跌、涨幅和振幅。国内期货还显示源持仓和结算价，增仓按相邻两根的持仓差计算。行情源缺失的数值显示「—」。[K 线悬停实测图](acceptance/ide/results/1.0.10/chart-controls-hover.png)
+
+鼠标放在价格区或量能区，**滚轮向上放大、向下缩小**，以指向的 K 线为中心。**按住左键向右拖**可查看更早的数据，向左拖可回到最新。主图、均线和量能柱同步缩放和平移。查看历史时刷新会保留位置。切换品种或周期后，从最新一段开始显示。[缩放与拖动实测](acceptance/ide/results/1.0.8/chart-readings.json)
+
+点 **MA…**，用逗号分隔每条线的周期。例如输入 `3,8,34` 即显示三条均线。默认值为 `5,10,20,60`，支持最多 8 条，每条 1–250 根，清空可隐藏全部。均线按当前周期最近 N 根收盘价的算术平均计算，从第 N 根起显示。设置在各品种及 Rider 项目窗口间共享，重启后保留。
+
+沪深京、港股和场内 ETF 使用东方财富的不复权行情。国内外期货使用新浪同一合约的历史行情，120 分钟线沿用源站划分的交易时段，周线按交易日期合并日线。场外基金按披露日期显示单位净值或每万份收益，周图取该周最后一次披露值，这些品种没有场内成交量。图中日期和时间取自行情源。若源开盘或收盘价超出它给出的高低区间，图上用菱形标出收盘价，悬停可查原始记录。
+
+图表可见期间，插件每 **2 秒**查询当前品种的报价和所选周期的 K 线，慢请求会等上一笔完成再取下一笔。点周期菜单左侧的 **关闭 K 线** 收起图表，双击任一品种可重新打开。关闭图表或收起侧栏后，报价恢复各品种原有的交易时段和频率。历史请求失败时保留上次图表，可见期间自动重试。
 
 ## 报价怎么看
 
@@ -45,6 +61,10 @@ $env:JAVA_HOME = Join-Path $env:RIDER_HOME 'jbr'
 
 ## 验收
 
+- 运行 `./acceptance/ide/Run-RiderAcceptance.ps1 -Phase group-toggle -Version 1.0.11 -Install`，可核对所有分组的整行点击、分组拖动和品种双击。[1.0.11 实测记录](acceptance/ide/results/1.0.11/group-toggle.json)
+- 运行 `./acceptance/ide/Run-RiderAcceptance.ps1 -Phase chart-controls -Version 1.0.10 -Install`，可在 Rider 中核对关闭按钮的位置、悬停读数、单击切换和关闭后双击重开。[1.0.10 实测记录](acceptance/ide/results/1.0.10/chart-controls.json)
+- 运行 `./acceptance/ide/Run-RiderAcceptance.ps1 -Phase chart-inspect -Version 1.0.9 -Install`，结束后运行 `python acceptance/ide/verify_chart_readings.py --inspection`。该阶段检查详情框双向停靠、十字线、价标、开关图与切换品种时的实际请求，并用同期源行情复算所指 K 线及均线。[1.0.9 实测记录](acceptance/ide/results/1.0.9/chart-inspection.json)
+- 运行 `.\acceptance\ide\Run-RiderAcceptance.ps1 -Phase charts -Version 1.0.8 -ProfileName rider-263-charts-108-final -Install`，待该实例退出后，以相同的版本和配置名运行 `-Phase charts-restart`。再运行 `python acceptance/ide/verify_chart_readings.py` 可独立复算 Rider 显示的开高低收、量能和 MA。实测覆盖 30 个品种与周期组合、滚轮缩放、左键平移、刷新保留视区、修改均线及重启恢复。[实测读数](acceptance/ide/results/1.0.8/chart-readings.json)
 - 在内地交易时段运行 `.\acceptance\ide\Run-RiderAcceptance.ps1 -Phase fund-quotes -Version 1.0.7 -Install` 可核对沪深 ETF 现价、混合基金与联接基金估值、货币基金收益和自动刷新。要复验旧自选升级，先运行 `-Phase fund-legacy -Version 1.0.6 -Install`，两次指定相同的 `-ProfileName`。[基金侧栏](acceptance/ide/results/1.0.7/fund-quotes.png)
 - 在同一验收配置依次运行 `hours-legacy`（1.0.5）、`hours-discovery` 和 `hours-cache`（1.0.6），可核对旧自选升级、添加新品种、共用时段与重启恢复。[Rider 实测](acceptance/ide/results/1.0.6/hours-discovery.json)
 - 在收录的内地交易日运行 `.\acceptance\ide\Run-RiderAcceptance.ps1 -Phase refresh-hours -Version 1.0.5 -Install` 可检查玻璃侧栏与自定义时段的连续自动请求。实例退出后，运行 `-Phase hours-restart -Version 1.0.5` 可复验保存与清空时段。[侧栏实测](acceptance/ide/results/1.0.5/refresh-hours-sidebar.png) · [时段编辑框](acceptance/ide/results/1.0.5/refresh-hours-editor.png)

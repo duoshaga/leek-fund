@@ -12,15 +12,18 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.panels.HorizontalLayout
 import com.intellij.ui.JBColor
+import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.render.RenderingUtil
 import com.intellij.ui.tree.ui.Control
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.tree.TreeUtil
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.Graphics
+import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.function.Supplier
 import javax.swing.BoxLayout
@@ -31,6 +34,7 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTree
 import javax.swing.JToolBar
+import javax.swing.SwingUtilities
 import javax.swing.ToolTipManager
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
@@ -54,10 +58,33 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
     val input get() = picker.input
     private val feedback = JBLabel().apply { name = "leek.feedback"; isVisible = false }
     private val detailLine = JBLabel().apply { name = "leek.sourceTime"; isVisible = false; border = JBUI.Borders.empty(3, 6) }
+    private val chart = ChartPanel(service)
     private val root = DefaultMutableTreeNode()
     private val model = DefaultTreeModel(root, true)
     private val groups = WatchGroup.entries.associateWith { DefaultMutableTreeNode(it) }
     private val tree = object : Tree(model) {
+        private var pressedGroup: Pair<TreePath, Boolean>? = null
+
+        private fun groupAt(event: MouseEvent): TreePath? =
+            TreeUtil.getPathForLocation(this, event.x, event.y)?.takeIf {
+                (it.lastPathComponent as DefaultMutableTreeNode).userObject is WatchGroup
+            }
+
+        override fun processMouseEvent(event: MouseEvent) {
+            if (event.id == MouseEvent.MOUSE_PRESSED && SwingUtilities.isLeftMouseButton(event)) {
+                // The native arrow can toggle on press. Resolve the completed click from its original state.
+                pressedGroup = groupAt(event)?.let { it to isExpanded(it) }
+            }
+            super.processMouseEvent(event)
+            if (event.id == MouseEvent.MOUSE_CLICKED && SwingUtilities.isLeftMouseButton(event)) {
+                val (path, wasExpanded) = pressedGroup ?: return
+                pressedGroup = null
+                if (groupAt(event) == path && isExpanded(path) == wasExpanded) {
+                    if (wasExpanded) collapsePath(path) else expandPath(path)
+                }
+            }
+        }
+
         override fun getToolTipText(event: MouseEvent): String? {
             val symbol = symbolAt(getPathForLocation(event.x, event.y)) ?: return null
             return rows[symbol.code]?.let(QuoteText::tooltip)
@@ -74,11 +101,13 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
     private val remove = button("删除", "remove", AllIcons.General.Remove) {
         selected()?.let { service.remove(it.code) }
     }
-    private val refresh = button("刷新", "refresh", AllIcons.Actions.Refresh) { service.refresh() }
+    private val refresh = button("刷新", "refresh", AllIcons.Actions.Refresh) { service.refresh(); chart.refresh() }
     private val hours = button("设置自动刷新时段", "hours", AllIcons.General.History) { editRefreshHours() }
     private var rows = emptyMap<String, WatchRow>()
     private var pinnedCode: String? = null
     private var selectAfterAdd: String? = null
+    private var maPeriods = MovingAverages.defaults
+    private var rebuildingTree = false
 
     init {
         name = "leek.panel"
@@ -110,6 +139,8 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
         tree.isRootVisible = false
         tree.showsRootHandles = true
         tree.rowHeight = JBUI.scale(22)
+        // Handle group-row clicks after release so starting a drag leaves the group as it was.
+        tree.toggleClickCount = 0
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
         tree.putClientProperty(Control.Painter.KEY, Control.Painter.LEAF_WITHOUT_INDENT)
         tree.transferHandler = WatchTreeReorder(tree, service)
@@ -119,9 +150,21 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
         tree.putClientProperty(RenderingUtil.CUSTOM_SELECTION_BACKGROUND, Supplier { tree.background })
         RenderingUtil.setHoverPaintingDisabled(tree, true)
         tree.cellRenderer = RowRenderer()
-        tree.addTreeSelectionListener { updateButtons() }
+        tree.addTreeSelectionListener { if (!rebuildingTree) updateButtons() }
+        tree.addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(event: MouseEvent) {
+                if (event.clickCount != 2 || !SwingUtilities.isLeftMouseButton(event)) return
+                val path = tree.getPathForLocation(event.x, event.y) ?: return
+                val symbol = symbolAt(path) ?: return
+                tree.selectionPath = path
+                chart.select(rows[symbol.code], maPeriods)
+            }
+        })
         ToolTipManager.sharedInstance().registerComponent(tree)
-        add(JBScrollPane(tree), BorderLayout.CENTER)
+        add(OnePixelSplitter(true, "leek.chart.split", 0.46f).apply {
+            firstComponent = JBScrollPane(tree)
+            secondComponent = chart
+        }, BorderLayout.CENTER)
         add(detailLine, BorderLayout.SOUTH)
         render()
         service.subscribe(this, ::render)
@@ -188,6 +231,7 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
         pin.toolTipText = if (pinned) "取消固定" else "固定到状态栏"
         pin.accessibleContext.accessibleName = pin.toolTipText
         val row = rows[code]
+        if (chart.isVisible) chart.select(row, maPeriods)
         detailLine.isVisible = row != null
         if (row != null) {
             detailLine.text = row.symbol.code + "  ·  " + QuoteText.timestamp(row)
@@ -196,7 +240,14 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
     }
 
     private fun render() {
+        rebuildingTree = true
+        try { syncTree() } finally { rebuildingTree = false }
+        updateButtons()
+    }
+
+    private fun syncTree() {
         val view = service.view()
+        maPeriods = view.maPeriods
         val next = view.rows.associateBy { it.symbol.code }
         val previous = rows
         val previousPin = pinnedCode
@@ -238,10 +289,10 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
             }
         }
         selectAfterAdd = null
-        updateButtons()
     }
 
     override fun dispose() {
+        chart.dispose()
         picker.hide()
         ToolTipManager.sharedInstance().unregisterComponent(tree)
     }

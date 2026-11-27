@@ -1,0 +1,27 @@
+{
+  "phase": "update-source",
+  "started": "2026-11-27T08:45:04.935538300Z",
+  "pid": 58636,
+  "build": "RD-263.7307.355",
+  "checks": {
+    "card": {
+      "version": "1.0.10",
+      "warningVisible": false,
+      "missingSource": false
+    },
+    "update": {
+      "source": "file:///J:/Tools/Leek/rider-plugin/dist/updatePlugins.xml",
+      "version": "1.0.11",
+      "matchesDistribution": true
+    }
+  },
+  "plugin": {
+    "id": "cn.leekbox.quotes",
+    "version": "1.0.10",
+    "path": "C:\\Users\\XuJiang\\AppData\\Local\\LeekBox\\rider-263-release-1010\\plugins\\leekbox-rider"
+  },
+  "ok": true,
+  "wire": [],
+  "requests": [],
+  "ended": "2026-11-27T08:45:07.230590800Z"
+}

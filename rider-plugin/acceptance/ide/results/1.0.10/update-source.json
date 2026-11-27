@@ -1,0 +1,27 @@
+{
+  "phase": "update-source",
+  "started": "2026-11-27T08:23:47.265521800Z",
+  "pid": 42412,
+  "build": "RD-263.7307.355",
+  "checks": {
+    "card": {
+      "version": "1.0.9",
+      "warningVisible": false,
+      "missingSource": false
+    },
+    "update": {
+      "source": "file:///J:/Tools/Leek/rider-plugin/dist/updatePlugins.xml",
+      "version": "1.0.10",
+      "matchesDistribution": true
+    }
+  },
+  "plugin": {
+    "id": "cn.leekbox.quotes",
+    "version": "1.0.9",
+    "path": "C:\\Users\\XuJiang\\AppData\\Local\\LeekBox\\rider-263-chart-controls-109-baseline\\plugins\\leekbox-rider"
+  },
+  "ok": true,
+  "wire": [],
+  "requests": [],
+  "ended": "2026-11-27T08:23:49.833176300Z"
+}

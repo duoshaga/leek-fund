@@ -25,14 +25,19 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 @Service(Service.Level.APP)
 @State(name = "LeekBoxWatchlist", storages = [Storage(value = "leekbox.xml", roamingType = RoamingType.DISABLED)])
-class LeekService(scope: CoroutineScope) : PersistentStateComponent<SavedWatchlist> {
+class LeekService(private val scope: CoroutineScope) : PersistentStateComponent<SavedWatchlist> {
     private val book = WatchBook(MarketSessions::interval)
     private val source: QuoteSource = MarketQuoteSource()
     private val hoursSource = DomesticHoursSource()
+    private val history = HistorySource()
     private val wake = Channel<Unit>(Channel.CONFLATED)
     private val hoursWake = Channel<Unit>(Channel.CONFLATED)
     private val listeners = CopyOnWriteArrayList<() -> Unit>()
     private val updatePending = AtomicBoolean()
+    internal val chartPolling = ChartPolling { symbols ->
+        val requests = book.reserveCharts(symbols)
+        if (requests.isNotEmpty()) scope.launch { fetchQuotes(requests) }
+    }
 
     // Directory and contract requests have their own worker so a slow lookup cannot delay quotes.
     private val hoursWorker = scope.launch(start = CoroutineStart.LAZY) {
@@ -60,26 +65,43 @@ class LeekService(scope: CoroutineScope) : PersistentStateComponent<SavedWatchli
     private val worker = scope.launch(start = CoroutineStart.LAZY) {
         while (isActive) {
             val requests = book.reserve(Instant.now())
-            if (requests.isNotEmpty()) {
-                val results = try {
-                    runInterruptible(Dispatchers.IO) { source.fetch(requests.map { it.symbol }) }
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (failure: Exception) {
-                    requests.associate { it.symbol.code to Result.failure<Quote?>(failure) }
-                }
-                val received = Instant.now()
-                for (request in requests) {
-                    val result = results[request.symbol.code] ?: Result.failure(IOException("Missing quote response"))
-                    book.complete(request, result, received)
-                }
-                publish()
-            }
+            if (requests.isNotEmpty()) fetchQuotes(requests)
             withTimeoutOrNull(1000L) { wake.receive() }
         }
     }
 
+    private suspend fun fetchQuotes(requests: List<Request>) {
+        val results = try {
+            runInterruptible(Dispatchers.IO) { source.fetch(requests.map { it.symbol }) }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            requests.associate { it.symbol.code to Result.failure<Quote?>(failure) }
+        }
+        val received = Instant.now()
+        for (request in requests) {
+            val result = results[request.symbol.code] ?: Result.failure(IOException("Missing quote response"))
+            book.complete(request, result, received)
+        }
+        publish()
+    }
+
     fun view() = book.view()
+
+    internal fun loadChart(symbol: Symbol, period: ChartPeriod, callback: (Result<ChartSeries>) -> Unit) = scope.launch {
+        val result = try {
+            Result.success(runInterruptible(Dispatchers.IO) { history.fetch(symbol, period) })
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            Result.failure(failure)
+        }
+        ApplicationManager.getApplication().invokeLater({ callback(result) }, ModalityState.any())
+    }
+
+    internal fun setMaPeriods(text: String) {
+        if (book.setMaPeriods(text)) publish()
+    }
     override fun getState() = book.save()
     override fun loadState(state: SavedWatchlist) {
         book.restore(state)

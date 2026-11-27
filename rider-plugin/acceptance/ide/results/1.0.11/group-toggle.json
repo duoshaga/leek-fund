@@ -1,0 +1,69 @@
+{
+  "phase": "group-toggle",
+  "started": "2026-11-27T08:44:25.772819300Z",
+  "pid": 89924,
+  "build": "RD-263.7307.355",
+  "checks": {
+    "groupClicks": {
+      "groups": {
+        "OVERSEAS": {
+          "children": 0,
+          "clickTargets": {
+            "name": 31,
+            "count": 84,
+            "right": 445,
+            "arrow": 15
+          }
+        },
+        "MAINLAND": {
+          "children": 0,
+          "clickTargets": {
+            "name": 31,
+            "count": 60,
+            "right": 445,
+            "arrow": 15
+          }
+        },
+        "HONG_KONG": {
+          "children": 0,
+          "clickTargets": {
+            "name": 31,
+            "count": 60,
+            "right": 445,
+            "arrow": 15
+          }
+        },
+        "FUND": {
+          "children": 0,
+          "clickTargets": {
+            "name": 31,
+            "count": 60,
+            "right": 445,
+            "arrow": 15
+          }
+        },
+        "DOMESTIC": {
+          "children": 1,
+          "clickTargets": {
+            "name": 31,
+            "count": 84,
+            "right": 445,
+            "arrow": 15
+          }
+        }
+      },
+      "belowLastRow": "unchanged",
+      "drag": "reordered while expanded",
+      "symbolDoubleClick": "nf_LC2705"
+    }
+  },
+  "plugin": {
+    "id": "cn.leekbox.quotes",
+    "version": "1.0.11",
+    "path": "C:\\Users\\XuJiang\\AppData\\Local\\LeekBox\\rider-263-release-1011\\plugins\\leekbox-rider"
+  },
+  "ok": true,
+  "wire": [],
+  "requests": [],
+  "ended": "2026-11-27T08:44:32.605795700Z"
+}

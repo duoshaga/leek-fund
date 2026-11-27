@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "cn.leekbox.rider"
-version = "1.0.7"
+version = "1.0.11"
 
 val riderHome = providers.gradleProperty("riderHome")
     .orElse(providers.environmentVariable("RIDER_HOME"))

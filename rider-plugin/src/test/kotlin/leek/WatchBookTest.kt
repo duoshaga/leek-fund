@@ -14,6 +14,25 @@ class WatchBookTest {
     private val quote = Quote(code, "螺纹钢2701", BigDecimal("3201"), BigDecimal("1.01"),
         "2026-11-26 14:59:57", "昨结算", BigDecimal("3169"), BigDecimal("3201"), false)
 
+    @Test fun onlyVisibleChartSymbolsCanRefreshEarlyAndInFlightReservationsAreShared() {
+        val selected = Symbol.parse(code)!!
+        val normal = Symbol.parse(other)!!
+        val closed = WatchBook { row, _ -> if (row.symbol == normal) Duration.ofSeconds(25) else null }
+        listOf(selected, normal).forEach { closed.add(it) }
+        val initial = closed.reserve(time)
+        assertTrue(closed.reserveCharts(listOf(selected)).isEmpty())
+        initial.forEach { closed.complete(it, Result.success(null), time) }
+        val active = closed.reserveCharts(listOf(selected, selected)).single()
+        assertEquals(selected, active.symbol)
+        assertTrue(closed.reserve(time.plusSeconds(2)).isEmpty())
+        assertTrue(closed.reserveCharts(listOf(selected)).isEmpty())
+        closed.complete(active, Result.success(quote), time.plusSeconds(2))
+        assertTrue(closed.reserve(time.plusSeconds(24)).isEmpty())
+        assertEquals(normal, closed.reserve(time.plusSeconds(25)).single().symbol)
+        closed.remove(code)
+        assertTrue(closed.reserveCharts(listOf(selected)).isEmpty())
+    }
+
     @Test fun movingWithinAMarketPreservesOtherSlotsPendingQuotesAndPinAcrossReload() {
         val initial = listOf(other, "hk00700", code, "sh000001", "nf_FG2705")
         initial.forEach { book.add(Symbol.parse(it)!!) }

@@ -1,0 +1,33 @@
+{
+  "phase": "chart-controls",
+  "started": "2026-11-27T08:22:13.366860200Z",
+  "pid": 33548,
+  "build": "RD-263.7307.355",
+  "checks": {
+    "controls": {
+      "header": {
+        "closeX": 184.0,
+        "closeWidth": 86.0,
+        "periodX": 273.0
+      },
+      "hovered": "日 K · 129 根 · 2026-10-30  开盘 87040  最高 90440  最低 85720  收盘 86000  成交量 62959手  涨跌 +480  涨幅 +0.56%  振幅 5.52%  结算 87640  持仓 173445  日增仓 -2606  增仓幅 -1.48%  成交额 —  MA5  89696  MA10  92296  MA20  99662  MA60  127219  最新价 82980  指针价 110410",
+      "floatingTooltip": false,
+      "singleClickWhileClosed": "selection only",
+      "doubleClickGroup": "closed",
+      "reopened": [
+        "nf_RB0",
+        "nf_LC2705"
+      ],
+      "singleClickWhileOpen": "nf_RB0"
+    }
+  },
+  "plugin": {
+    "id": "cn.leekbox.quotes",
+    "version": "1.0.10",
+    "path": "C:\\Users\\XuJiang\\AppData\\Local\\LeekBox\\rider-263-release-1010\\plugins\\leekbox-rider"
+  },
+  "ok": true,
+  "wire": [],
+  "requests": [],
+  "ended": "2026-11-27T08:22:17.868121800Z"
+}

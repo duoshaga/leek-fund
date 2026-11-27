@@ -19,7 +19,8 @@ internal val Symbol.watchGroup: WatchGroup get() = when (group) {
 data class WatchRow(val symbol: Symbol, val quote: Quote?, val state: QuoteState, val received: Instant?,
                     val displayName: String? = null, val refreshHours: DomesticRefreshHours? = null,
                     val marketHours: DomesticRefreshHours? = null, val hoursLookupFailed: Boolean = false)
-data class WatchView(val rows: List<WatchRow>, val pin: String?, val groupOrder: List<WatchGroup>) {
+data class WatchView(val rows: List<WatchRow>, val pin: String?, val groupOrder: List<WatchGroup>,
+                     val maPeriods: List<Int> = MovingAverages.defaults) {
     val pinned: WatchRow? get() = rows.firstOrNull { it.symbol.code == pin }
 }
 
@@ -46,6 +47,7 @@ internal class WatchBook(private val interval: (WatchRow, Instant) -> Duration?)
     private val schedules = linkedMapOf<String, ProductSchedule>()
     private val groupOrder = WatchGroup.entries.toMutableList()
     private var pin: String? = null
+    private var maPeriods = MovingAverages.defaults
     private var sequence = 0L
 
     private fun withSchedule(row: WatchRow): WatchRow {
@@ -54,7 +56,12 @@ internal class WatchBook(private val interval: (WatchRow, Instant) -> Duration?)
         return row.copy(marketHours = schedule.hours, hoursLookupFailed = schedule.failed)
     }
 
-    @Synchronized fun view() = WatchView(entries.values.map { withSchedule(it.row) }, pin, groupOrder.toList())
+    @Synchronized fun view() = WatchView(entries.values.map { withSchedule(it.row) }, pin, groupOrder.toList(), maPeriods)
+
+    @Synchronized fun setMaPeriods(text: String): Boolean {
+        maPeriods = MovingAverages.parse(text) ?: return false
+        return true
+    }
 
     @Synchronized fun add(symbol: Symbol, displayName: String? = null): Boolean {
         if (symbol.code in entries) return false
@@ -131,15 +138,22 @@ internal class WatchBook(private val interval: (WatchRow, Instant) -> Duration?)
 
     @Synchronized fun reserve(now: Instant): List<Request> = entries.values.mapNotNull { entry ->
         if (entry.active != null) return@mapNotNull null
-        val symbol = entry.row.symbol
         if (!entry.requested) {
             val cadence = interval(withSchedule(entry.row), now) ?: return@mapNotNull null
             val last = entry.lastAttempt
             if (last != null && now >= last && now < last.plus(cadence)) return@mapNotNull null
         }
+        reserve(entry)
+    }
+
+    @Synchronized fun reserveCharts(symbols: Collection<Symbol>): List<Request> = symbols.mapNotNull { symbol ->
+        entries[symbol.code]?.takeIf { it.active == null }?.let(::reserve)
+    }
+
+    private fun reserve(entry: Entry): Request {
         entry.requested = false
         entry.active = ++sequence
-        Request(symbol, sequence)
+        return Request(entry.row.symbol, sequence)
     }
 
     @Synchronized fun complete(request: Request, result: Result<Quote?>, now: Instant) {
@@ -160,6 +174,7 @@ internal class WatchBook(private val interval: (WatchRow, Instant) -> Duration?)
 
     @Synchronized fun save() = SavedWatchlist().also { saved ->
         saved.pinnedCode = pin
+        saved.maPeriods = maPeriods.joinToString(",")
         saved.groupOrder = groupOrder.map { it.name }.toMutableList()
         saved.items = entries.values.map { SavedItem.from(it.row) }.toMutableList()
         saved.marketSchedules = schedules.mapNotNull { (product, schedule) ->
@@ -173,6 +188,7 @@ internal class WatchBook(private val interval: (WatchRow, Instant) -> Duration?)
     }
 
     @Synchronized fun restore(saved: SavedWatchlist) {
+        maPeriods = saved.maPeriods?.let(MovingAverages::parse) ?: MovingAverages.defaults
         entries.clear()
         schedules.clear()
         groupOrder.clear()
@@ -228,6 +244,7 @@ private fun <T> MutableList<T>.moveRelativeTo(item: T, anchor: T, after: Boolean
 
 // Plain beans are the on-disk contract for IntelliJ's XML serializer.
 class SavedWatchlist {
+    var maPeriods: String? = null
     var items: MutableList<SavedItem> = mutableListOf()
     var pinnedCode: String? = null
     var groupOrder: MutableList<String> = mutableListOf()

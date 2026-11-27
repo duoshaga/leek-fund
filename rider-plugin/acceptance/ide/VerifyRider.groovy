@@ -22,6 +22,7 @@ import com.intellij.ui.hover.TreeHoverListener
 import com.intellij.ui.render.RenderingUtil
 import com.intellij.util.net.JdkProxyCustomizer
 import com.intellij.util.ui.UIUtil
+import com.intellij.util.ui.tree.TreeUtil
 import javax.swing.*
 import javax.swing.tree.TreePath
 import java.awt.Container
@@ -34,6 +35,7 @@ import java.awt.dnd.DragSource
 import java.awt.dnd.DropTargetDragEvent
 import java.awt.dnd.DropTargetDropEvent
 import java.awt.event.MouseEvent
+import java.awt.event.MouseWheelEvent
 import java.awt.image.BufferedImage
 import java.nio.file.Path
 import java.time.Instant
@@ -45,6 +47,9 @@ import javax.imageio.ImageIO
 
 class QuoteTraffic extends ProxySelector {
     static final hosts = ['hq.sinajs.cn', 'qt.gtimg.cn', 'api.fund.eastmoney.com', 'fundsuggest.eastmoney.com', 'futsse-static.eastmoney.com'] as Set
+    static final chartHosts = ['push2his.eastmoney.com', 'stock2.finance.sina.com.cn', 'gu.sina.cn', 'fundmobapi.eastmoney.com'] as Set
+    final Set tracked
+    final Set blockedHosts = java.util.concurrent.ConcurrentHashMap.newKeySet()
     final offline = new AtomicBoolean(false)
     final requests = new CopyOnWriteArrayList()
     final files = new CopyOnWriteArrayList()
@@ -53,10 +58,10 @@ class QuoteTraffic extends ProxySelector {
     final observing = new ThreadLocal<Boolean>()
     final File folder
     final int closedPort
-    QuoteTraffic(int port, File dest) { closedPort = port; folder = dest; dest.mkdirs() }
+    QuoteTraffic(int port, File dest, Set tracked = hosts) { closedPort = port; folder = dest; dest.mkdirs(); this.tracked = tracked }
     List<Proxy> select(URI uri) {
-        if (observing.get() || uri.scheme != 'https' || !hosts.contains(uri.host)) return []
-        def record = [at: Instant.now().toString(), url: uri.toString(), failedByTest: offline.get()]
+        if (observing.get() || uri.scheme != 'https' || !(tracked.contains(uri.host) || blockedHosts.contains(uri.host))) return []
+        def record = [at: Instant.now().toString(), url: uri.toString(), failedByTest: offline.get() || blockedHosts.contains(uri.host)]
         requests.add(record)
         if (record.failedByTest) return [new Proxy(Proxy.Type.HTTP, new InetSocketAddress('127.0.0.1', closedPort))]
         // A separate HTTPS read at the same instant provides an independent source observation.
@@ -72,9 +77,13 @@ class QuoteTraffic extends ProxySelector {
                 connection.setRequestProperty('User-Agent','Mozilla/5.0')
                 def referer = ['hq.sinajs.cn': 'https://finance.sina.com.cn/', 'qt.gtimg.cn': 'https://gu.qq.com/',
                                'api.fund.eastmoney.com': 'https://fundf10.eastmoney.com/', 'fundsuggest.eastmoney.com': 'https://fund.eastmoney.com/',
-                               'futsse-static.eastmoney.com': 'https://quote.eastmoney.com/']
+                               'futsse-static.eastmoney.com': 'https://quote.eastmoney.com/', 'push2his.eastmoney.com': 'https://quote.eastmoney.com/',
+                               'stock2.finance.sina.com.cn':'https://finance.sina.com.cn/', 'gu.sina.cn':'https://finance.sina.com.cn/',
+                               'fundmobapi.eastmoney.com':'https://fund.eastmoney.com/']
                 connection.setRequestProperty('Referer', referer[uri.host])
-                if (connection.responseCode == 200) new File(folder, sample.file).bytes = connection.inputStream.withCloseable { it.readNBytes(524289) }
+                if (connection.responseCode == 200) new File(folder, sample.file).bytes = connection.inputStream.withCloseable {
+                    it.readNBytes(chartHosts.contains(uri.host) ? 4 * 1024 * 1024 : 524289)
+                }
                 sample.status = connection.responseCode
             } catch (Exception failure) { sample.error = failure.toString() }
             finally { connection?.disconnect(); files.add(sample); observing.remove() }
@@ -184,6 +193,270 @@ def hoursDialog(pane, String code) {
         field && ok ? [field: field, ok: ok, pane: dialog.rootPane] : null
     }}
 }
+
+def chartReading(pane, String code, String period) {
+    edt {
+        selectCode(pane, code)
+        def combo = child(pane, 'leek.chartPeriod')
+        def index = (0..<combo.itemCount).find { combo.getItemAt(it).name() == period }
+        assert index != null : [code, period]
+        combo.selectedIndex = index
+    }
+    awaitValue(code + ' ' + period + ' historical chart', 35) { edt {
+        def combo = child(pane, 'leek.chartPeriod')
+        def plot = child(pane, 'leek.chartPlot')
+        def status = child(pane, 'leek.chartStatus')
+        def description = plot.accessibleContext.accessibleDescription
+        if (status.showing && status.text.contains('失败')) throw new AssertionError("$code $period " + status.text)
+        if (!plot.showing || status.showing || !description?.startsWith(combo.selectedItem.toString() + ' · ')) return null
+        assert child(pane, 'leek.chartTitle').toolTipText.contains(code)
+        // A point inside either pane resolves to the same dated candle on the shared axis.
+        def tipAt = { double h -> plot.getToolTipText(new MouseEvent(plot, MouseEvent.MOUSE_MOVED, 0L, 0,
+            (int)(plot.width * .4), (int)(plot.height * h), 0, false)) }
+        def tip = tipAt(.42)
+        if (!tip) return null
+        assert tip == tipAt(.81) : [tip, tipAt(.81)]
+        [latest:description, tooltip:tip, choices:combo.itemCount]
+    }}
+}
+
+def maDialog(pane) {
+    SwingUtilities.invokeLater { child(pane, 'leek.chartMA').doClick(0) }
+    awaitValue('MA settings dialog') { edt {
+        def dialog = java.awt.Window.windows.find { it instanceof JDialog && it.showing && it.title == '均线设置' }
+        if (dialog == null) return null
+        def field = UIUtil.uiTraverser(dialog).filter(JTextField).find { it.showing && it.editable }
+        field ? [field:field, ok:dialog.rootPane.defaultButton, pane:dialog.rootPane] : null
+    }}
+}
+
+def chartWindow(plot) {
+    plot.paintImmediately(0, 0, plot.width, plot.height)
+    int priceY = plot.height * .42, volumeY = plot.height * .81
+    def cells = []
+    for (int x = 0; x < plot.width; x++) {
+        def tip = plot.getToolTipText(new MouseEvent(plot, MouseEvent.MOUSE_MOVED, 0, 0, x, priceY, 0, false))
+        if (!tip) continue
+        def date = tip.substring(6, tip.indexOf('<br>'))
+        if (cells && cells.last().date == date) cells.last().end = x
+        else {
+            assert tip == plot.getToolTipText(new MouseEvent(plot, MouseEvent.MOUSE_MOVED, 0, 0, x, volumeY, 0, false))
+            cells << [date:date, start:x, end:x]
+        }
+    }
+    assert cells.size() >= 5
+    return cells
+}
+
+def chartGestures(pane, File evidence, String image = 'charts-zoom-pan.png') {
+    def plot = child(pane, 'leek.chartPlot')
+    def span = { cells -> [from:cells.first().date, to:cells.last().date, count:cells.size()] }
+    def record = edt {
+        def original = chartWindow(plot)
+        def anchor = original[original.size().intdiv(2)]
+        int x = (anchor.start + anchor.end).intdiv(2), y = plot.height * .81
+        def wheel = { int turns ->
+            plot.dispatchEvent(new MouseWheelEvent(plot, MouseEvent.MOUSE_WHEEL, System.currentTimeMillis(), 0,
+                x, y, 0, false, MouseWheelEvent.WHEEL_UNIT_SCROLL, 1, turns))
+        }
+        def move = { int distance, int mask, int button ->
+            plot.dispatchEvent(new MouseEvent(plot, MouseEvent.MOUSE_PRESSED, 0, mask, x, y, 1, false, button))
+            plot.dispatchEvent(new MouseEvent(plot, MouseEvent.MOUSE_DRAGGED, 0, mask, x + distance, y, 0, false, 0))
+            plot.dispatchEvent(new MouseEvent(plot, MouseEvent.MOUSE_RELEASED, 0, 0, x + distance, y, 1, false, button))
+        }
+        wheel(-2)
+        def zoomed = chartWindow(plot)
+        assert zoomed.size() < original.size() && zoomed.find { x >= it.start && x <= it.end }.date == anchor.date
+        wheel(2)
+        def wider = chartWindow(plot)
+        assert wider.size() > zoomed.size() && wider.find { x >= it.start && x <= it.end }.date == anchor.date
+        wheel(-2)
+        def start = chartWindow(plot)
+        move(80, MouseEvent.BUTTON3_DOWN_MASK, MouseEvent.BUTTON3)
+        assert span(chartWindow(plot)) == span(start)
+        move(80, MouseEvent.BUTTON1_DOWN_MASK, MouseEvent.BUTTON1)
+        def earlier = chartWindow(plot)
+        assert earlier.first().date < start.first().date && earlier.last().date < start.last().date && earlier.size() == start.size()
+        move(-80, MouseEvent.BUTTON1_DOWN_MASK, MouseEvent.BUTTON1)
+        assert span(chartWindow(plot)) == span(start)
+        move(12000, MouseEvent.BUTTON1_DOWN_MASK, MouseEvent.BUTTON1)
+        def oldest = span(chartWindow(plot))
+        move(12000, MouseEvent.BUTTON1_DOWN_MASK, MouseEvent.BUTTON1)
+        assert span(chartWindow(plot)) == oldest
+        move(-12000, MouseEvent.BUTTON1_DOWN_MASK, MouseEvent.BUTTON1)
+        assert chartWindow(plot).last().date == original.last().date
+        move(100, MouseEvent.BUTTON1_DOWN_MASK, MouseEvent.BUTTON1)
+        def panned = span(chartWindow(plot))
+        paintComponent(pane, new File(evidence, image))
+        child(pane, 'leek.refresh').doClick(0)
+        [original:span(original), anchor:anchor.date, zoomed:span(zoomed), draggedRight:span(earlier), panned:panned, oldest:oldest]
+    }
+    awaitValue('panned dates survive refresh') { edt {
+        !child(pane, 'leek.chartStatus').showing && span(chartWindow(plot)) == record.panned
+    }}
+    return record
+}
+
+def inspectCandles(pane, File evidence) {
+    edt {
+        def plot = child(pane, 'leek.chartPlot')
+        def cells = chartWindow(plot)
+        def mid = { c -> (c.start + c.end).intdiv(2) }
+        int priceY = plot.height * .41, volumeY = plot.height * .85
+        def reference = cells.find { it.date == '2026-11-25 10:00' }
+        def right = reference ?: cells[(cells.size() * 3).intdiv(4)]
+        def left = cells[cells.size().intdiv(5)]
+        def move = { int x, int y ->
+            plot.dispatchEvent(new MouseEvent(plot, MouseEvent.MOUSE_MOVED, 0, 0, x, y, 0, false))
+            plot.paintImmediately(0, 0, plot.width, plot.height)
+        }
+        def inspect = { selected, int y, String side ->
+            int x = mid(selected)
+            move(x, y)
+            def desc = plot.accessibleContext.accessibleDescription
+            assert desc.contains(selected.date) && desc.contains('指针价 ') && desc.contains('MA20 ')
+            def tip = plot.getToolTipText(new MouseEvent(plot, MouseEvent.MOUSE_MOVED, 0, 0, x, y, 0, false))
+            def file = 'chart-detail-' + side + '.png'
+            def frame = paintComponent(pane, new File(evidence, file))
+            def origin = SwingUtilities.convertPoint(plot, 0, 0, pane)
+            def img = frame.getSubimage((int) origin.x, (int) origin.y, plot.width, plot.height)
+            def bounds = [left:plot.width, right:-1, top:plot.height, bottom:-1]
+            def cardColors = [0xF5F7FA, 0x272A30] as Set
+            int dottedX = 0, dottedY = 0, cursorTag = 0, latestTag = 0
+            for (int py = 0; py < img.height; py++) {
+                for (int px = 0; px < img.width; px++) {
+                    int rgb = img.getRGB(px, py) & 0xffffff
+                    if (cardColors.contains(rgb)) {
+                        bounds.left = Math.min(bounds.left, px); bounds.right = Math.max(bounds.right, px)
+                        bounds.top = Math.min(bounds.top, py); bounds.bottom = Math.max(bounds.bottom, py)
+                    }
+                    if (rgb == 0x586577 || rgb == 0xB3C1D1) {
+                        if (Math.abs(px - x) <= 2) dottedX++
+                        if (Math.abs(py - y) <= 1) dottedY++
+                    }
+                    if (px == img.width - 2) {
+                        if (rgb == 0x007970) latestTag++
+                        if (rgb == 0x335F88 || rgb == 0x345E87) cursorTag++
+                    }
+                }
+            }
+            assert bounds.right - bounds.left > 50 && bounds.bottom - bounds.top > 60 : bounds
+            assert side == 'left' ? bounds.right < x : bounds.left > x
+            assert dottedX >= 10 && dottedY >= 10 && cursorTag >= 6 && latestTag >= 6 : [dottedX, dottedY, cursorTag, latestTag]
+            [date:selected.date, x:x, y:y, card:bounds, tooltip:tip, reading:desc, image:file]
+        }
+        def cardRight = inspect(left, priceY, 'right')
+        def cardLeft = inspect(right, priceY, 'left')
+        int x = mid(right)
+        move(x, priceY - 14)
+        def higher = plot.accessibleContext.accessibleDescription
+        def reading = { desc -> (desc =~ /指针价 ([-\d.]+)/)[0][1].toBigDecimal() }
+        assert higher.contains(right.date) && reading(higher) > reading(cardLeft.reading)
+        move(x, volumeY)
+        assert plot.accessibleContext.accessibleDescription.contains('指针量 ')
+        assert !plot.accessibleContext.accessibleDescription.contains('指针价 ')
+        plot.dispatchEvent(new MouseEvent(plot, MouseEvent.MOUSE_EXITED, 0, 0, -1, -1, 0, false))
+        plot.paintImmediately(0, 0, plot.width, plot.height)
+        assert !plot.accessibleContext.accessibleDescription.contains('指针')
+        move(x, priceY)
+        [left:cardLeft, right:cardRight, volume:true, mouseExit:true, sameBarHigherPrice:reading(higher)]
+    }
+}
+
+def inspectChartPolling(project, pane, service, meter, toggle) {
+    def chart = child(pane, 'leek.chart'), plot = child(pane, 'leek.chartPlot')
+    def requests = { int mark, String contract, boolean history ->
+        meter.requests.drop(mark).findAll { row ->
+            def uri = URI.create(row.url)
+            history ? uri.host == 'stock2.finance.sina.com.cn' && uri.query.split('&').contains('symbol=' + contract) :
+                uri.host == 'hq.sinajs.cn' && uri.path.startsWith('/list=') && uri.path.substring(6).split(',').contains('nf_' + contract)
+        }
+    }
+    def active = { String contract, String other ->
+        int mark = meter.requests.size()
+        def samples = awaitValue('three fast history and spot requests for ' + contract, 25) {
+            def hits = [quote:requests(mark, contract, false), history:requests(mark, contract, true)]
+            hits.values().every { it.size() >= 3 } ? hits : null
+        }
+        def intervals = samples.collectEntries { kind, rows ->
+            def times = rows.collect { Instant.parse(it.at).toEpochMilli() }
+            def gaps = (1..<times.size()).collect { times[it] - times[it - 1] }
+            assert gaps.every { it >= 1500 && it <= 3000 } : [kind, gaps]
+            [(kind):gaps]
+        }
+        assert requests(mark, other, false).empty && requests(mark, other, true).empty
+        intervals
+    }
+    def quiet = { boolean hideSidebar ->
+        int restored = 0
+        while (restored < 4) {
+            if (hideSidebar) {
+                edt { tool(project).hide(null) }
+                awaitValue('hidden sidebar') { edt { !tool(project).visible && !chart.showing } }
+            }
+            Thread.sleep(400)
+            int mark = meter.requests.size()
+            long start = System.nanoTime()
+            boolean visibleAgain = false
+            while (System.nanoTime() - start < 4_600_000_000L) {
+                def state = edt { [chart.showing, tool(project).visible] }
+                // Rider can restore the tool-window layout when its backend finishes starting.
+                if (hideSidebar && state == [true, true]) { visibleAgain = true; break }
+                assert !state[0] : 'The chart reopened with its toggle off or its sidebar hidden'
+                Thread.sleep(120)
+            }
+            if (visibleAgain) { restored++; continue }
+            for (code in ['AO2702', 'RB0']) for (history in [true, false]) {
+                def unexpected = requests(mark, code, history)
+                assert unexpected.empty : unexpected
+            }
+            return [quietMs:(System.nanoTime() - start).intdiv(1_000_000L), layoutRestores:restored]
+        }
+        throw new AssertionError('Rider repeatedly restored the sidebar before the hidden interval could be observed')
+    }
+    def first = active('AO2702', 'RB0')
+    def stationary = edt { plot.accessibleContext.accessibleDescription }
+    assert stationary.contains('指针价 ') && stationary.contains('持仓 ')
+    edt { selectCode(pane, 'nf_RB0') }
+    def switched = active('RB0', 'AO2702')
+    edt {
+        toggle.doClick(0)
+        assert !chart.showing && !toggle.selected
+        selectCode(pane, 'nf_AO2702')
+        assert !chart.showing && child(pane, 'leek.sourceTime').text.contains('nf_AO2702')
+    }
+    def closedInterval = quiet(false)
+    int manual = meter.requests.size()
+    edt { child(pane, 'leek.refresh').doClick(0) }
+    awaitValue('ordinary manual quote refresh while the chart is closed') {
+        ['AO2702', 'RB0'].every { !requests(manual, it, false).empty }
+    }
+    assert requests(manual, 'AO2702', true).empty && requests(manual, 'RB0', true).empty
+    def row = { service.view().rows.find { it.symbol.code == 'nf_AO2702' } }
+    def quietHours = row().refreshHours.text
+    assert service.setRefreshHours('nf_AO2702', '00:00-23:59')
+    def sessions = service.class.classLoader.loadClass('leek.MarketSessions').getField('INSTANCE').get(null)
+    Long ordinaryGap = null
+    try {
+        if (sessions.interval(row(), Instant.now()) != null) {
+            def normal = awaitValue('ordinary 25-second automatic quote with the chart closed', 40) {
+                def hits = requests(manual, 'AO2702', false)
+                hits.size() >= 2 ? hits : null
+            }
+            ordinaryGap = Instant.parse(normal[1].at).toEpochMilli() - Instant.parse(normal[0].at).toEpochMilli()
+            assert ordinaryGap >= 25000 && ordinaryGap < 37000 : ordinaryGap
+            assert requests(manual, 'AO2702', true).empty && requests(manual, 'RB0', false).size() == 1
+        }
+    } finally { service.setRefreshHours('nf_AO2702', quietHours) }
+    edt { toggle.doClick(0); assert chart.showing && toggle.selected }
+    def reopened = active('AO2702', 'RB0')
+    def hiddenInterval = quiet(true)
+    edt { tool(project).show() }
+    def shown = active('AO2702', 'RB0')
+    [initial:first, switched:switched, reopened:reopened, shown:shown,
+     stationary:stationary, closed:closedInterval, hidden:hiddenInterval, manualRefresh:true, ordinaryGapMs:ordinaryGap]
+}
+
 def grab(service) {
     def view = service.view()
     return view.rows.collectEntries { row ->
@@ -219,6 +492,137 @@ def watchPath(tree, String key) {
     }
     assert node != null : key
     new TreePath(node.path)
+}
+
+def clickWatchRow(tree, String key, int clicks) {
+    def path = watchPath(tree, key)
+    tree.scrollPathToVisible(path)
+    def bounds = tree.getPathBounds(path)
+    clickTreeAt(tree, (int) bounds.x + 5, (int) bounds.centerY, clicks)
+}
+
+def clickTreeAt(tree, int x, int y, int clicks = 1) {
+    for (int count = 1; count <= clicks; count++) {
+        long time = System.currentTimeMillis()
+        tree.dispatchEvent(new MouseEvent(tree, MouseEvent.MOUSE_PRESSED, time, MouseEvent.BUTTON1_DOWN_MASK, x, y, count, false, MouseEvent.BUTTON1))
+        tree.dispatchEvent(new MouseEvent(tree, MouseEvent.MOUSE_RELEASED, time, 0, x, y, count, false, MouseEvent.BUTTON1))
+        tree.dispatchEvent(new MouseEvent(tree, MouseEvent.MOUSE_CLICKED, time, 0, x, y, count, false, MouseEvent.BUTTON1))
+    }
+}
+
+def inspectGroupClicks(pane, File evidence) {
+    def tree = child(pane, 'leek.watchlist'), chart = child(pane, 'leek.chart')
+    def cases = edt {
+        def results = [:]
+        for (key in ['OVERSEAS', 'MAINLAND', 'HONG_KONG', 'FUND', 'DOMESTIC']) {
+            def path = watchPath(tree, key), node = path.lastPathComponent
+            tree.collapsePath(path)
+            tree.scrollPathToVisible(path)
+            def bounds = tree.getPathBounds(path)
+            int y = bounds.centerY
+            def arrow = (0..<bounds.x).findAll { x -> TreeUtil.isLocationInExpandControl(tree, path, x, y) }
+            assert arrow : "Missing expansion arrow for $key"
+            int countX = bounds.x + tree.getFontMetrics(tree.font).stringWidth(node.userObject.title + ' (') + 1
+            def targets = [name:(int) bounds.x + 4, count:countX, right:(int) tree.visibleRect.maxX - 3,
+                           arrow:(arrow.first() + arrow.last()).intdiv(2)]
+            for (hit in targets) {
+                clickTreeAt(tree, hit.value, y)
+                assert tree.isExpanded(path) : "$key did not expand on a single click on ${hit.key}"
+                if (node.childCount) assert tree.getRowForPath(path.pathByAddingChild(node.firstChild)) >= 0
+                if (key == 'OVERSEAS' && hit.key == 'name') paintComponent(pane, new File(evidence, 'group-toggle-expanded.png'))
+                clickTreeAt(tree, hit.value, y)
+                assert !tree.isExpanded(path) : "$key did not collapse on a single click on ${hit.key}"
+                if (node.childCount) assert tree.getRowForPath(path.pathByAddingChild(node.firstChild)) == -1
+                if (key == 'OVERSEAS' && hit.key == 'name') paintComponent(pane, new File(evidence, 'group-toggle-collapsed.png'))
+            }
+            results[key] = [children:node.childCount, clickTargets:targets]
+        }
+        def last = tree.getRowBounds(tree.rowCount - 1)
+        clickTreeAt(tree, (int) last.centerX, (int) last.maxY + 4)
+        assert results.keySet().every { !tree.isExpanded(watchPath(tree, it)) }
+        assert !chart.showing
+        results
+    }
+    def moveAfter = edt {
+        def order = sectionRows(tree).keySet().toList()
+        boolean after = order.indexOf('DOMESTIC') < order.indexOf('MAINLAND')
+        tree.expandPath(watchPath(tree, 'DOMESTIC'))
+        clickWatchRow(tree, 'nf_LC2705', 1)
+        assert !chart.showing
+        assert dragRow(tree, 'DOMESTIC', 'MAINLAND', after)
+        after
+    }
+    awaitValue('drag reorders the expanded group') { edt {
+        def order = sectionRows(tree).keySet().toList()
+        order.indexOf('DOMESTIC') == order.indexOf('MAINLAND') + (moveAfter ? 1 : -1)
+    }}
+    edt {
+        assert tree.isExpanded(watchPath(tree, 'DOMESTIC')) : 'Dragging a group changed its expanded state'
+        clickWatchRow(tree, 'nf_LC2705', 2)
+        assert chart.showing && child(chart, 'leek.chartTitle').toolTipText.contains('nf_LC2705')
+    }
+    [groups:cases, belowLastRow:'unchanged', drag:'reordered while expanded', symbolDoubleClick:'nf_LC2705']
+}
+
+def inspectChartControls(pane, File evidence) {
+    def tree = child(pane, 'leek.watchlist'), chart = child(pane, 'leek.chart')
+    def title = child(chart, 'leek.chartTitle'), period = child(chart, 'leek.chartPeriod')
+    def plot = child(chart, 'leek.chartPlot')
+    def showsCode = { code -> chart.showing && title.toolTipText.contains(code) }
+    edt {
+        clickWatchRow(tree, 'nf_LC2705', 1)
+        assert child(pane, 'leek.sourceTime').text.contains('nf_LC2705')
+        assert !chart.showing : 'Single-clicking a variety must leave the closed chart hidden'
+        clickWatchRow(tree, 'nf_LC2705', 2)
+        assert showsCode('nf_LC2705')
+    }
+    def close = child(chart, 'leek.chartClose')
+    def header = awaitValue('close button immediately left of the K-line period') { edt {
+        if (!close?.showing || close.width == 0 || period.width == 0) return null
+        def box = { c -> SwingUtilities.convertRectangle(c.parent, c.bounds, chart) }
+        def button = box(close), combo = box(period)
+        assert box(title).maxX <= button.x && button.maxX <= combo.x && button.contains(button.centerX, combo.centerY)
+        assert close.text == '关闭 K 线' && close.width - close.insets.left - close.insets.right >= close.getFontMetrics(close.font).stringWidth(close.text)
+        [closeX:button.x, closeWidth:button.width, periodX:combo.x]
+    }}
+    def reading = awaitValue('crosshair and docked readout on the lithium chart', 35) { edt {
+        if (!plot.accessibleContext.accessibleDescription || plot.width == 0) return null
+        plot.paintImmediately(0, 0, plot.width, plot.height)
+        int x = plot.width * .63, y = plot.height * .42
+        def move = new MouseEvent(plot, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0, x, y, 0, false)
+        plot.dispatchEvent(move)
+        plot.paintImmediately(0, 0, plot.width, plot.height)
+        def desc = plot.accessibleContext.accessibleDescription
+        if (!desc?.contains('指针价 ')) return null
+        assert desc.contains('收盘 ') && desc.contains('成交量 ') && desc.contains('MA20 ')
+        assert plot.getToolTipText(move) == null : 'The chart still offers a second floating readout'
+        paintComponent(pane, new File(evidence, 'chart-controls-hover.png'))
+        desc
+    }}
+    edt {
+        clickWatchRow(tree, 'nf_RB0', 1)
+        assert showsCode('nf_RB0')
+        close.doClick(0)
+        assert !chart.showing && !close.showing
+        clickWatchRow(tree, 'nf_RB0', 1)
+        assert !chart.showing
+        child(pane, 'leek.refresh').doClick(0)
+    }
+    edt {
+        paintComponent(pane, new File(evidence, 'chart-controls-closed.png'))
+        assert !chart.showing
+        clickWatchRow(tree, 'nf_RB0', 2)
+        assert showsCode('nf_RB0')
+        close.doClick(0)
+        clickWatchRow(tree, 'DOMESTIC', 2)
+        assert !chart.showing
+        clickWatchRow(tree, 'nf_LC2705', 1)
+        assert !chart.showing && child(pane, 'leek.sourceTime').text.contains('nf_LC2705')
+        clickWatchRow(tree, 'nf_LC2705', 2)
+        assert showsCode('nf_LC2705')
+    }
+    [header:header, hovered:reading, floatingTooltip:false, singleClickWhileClosed:'selection only',
+     doubleClickGroup:'closed', reopened:['nf_RB0', 'nf_LC2705'], singleClickWhileOpen:'nf_RB0']
 }
 
 // Keep the OS pointer and clipboard out of the test. Rider handles the mouse gesture and Swing
@@ -362,7 +766,7 @@ def profile = Path.of(PathManager.configPath).toAbsolutePath().parent
 assert profile == Path.of(System.getProperty('leek.qa.profile')).toAbsolutePath().normalize()
 assert !app.headlessEnvironment
 def phase = profile.resolve('phase.txt').toFile().getText('UTF-8').trim()
-assert phase in ['live', 'restart', 'monthly', 'close', 'fuzzy', 'index-search', 'appearance', 'watch-order', 'order-restart', 'update-source', 'refresh-hours', 'hours-restart', 'hours-legacy', 'hours-discovery', 'hours-cache', 'fund-legacy', 'fund-quotes']
+assert phase in ['live', 'restart', 'monthly', 'close', 'fuzzy', 'index-search', 'appearance', 'watch-order', 'order-restart', 'update-source', 'refresh-hours', 'hours-restart', 'hours-legacy', 'hours-discovery', 'hours-cache', 'fund-legacy', 'fund-quotes', 'charts', 'charts-restart', 'chart-inspect', 'chart-controls', 'group-toggle']
 def evidence = repo.resolve('rider-plugin/build/acceptance').toFile()
 def json = new GsonBuilder().setPrettyPrinting().serializeNulls().create()
 
@@ -373,7 +777,9 @@ Thread.startDaemon('LeekBox real Rider acceptance') {
     def save = { target.setText(json.toJson(note), 'UTF-8') }
     def check = { String key, Object data -> note.checks[key] = data; save() }
     def trashSocket = new ServerSocket(0, 1, InetAddress.loopbackAddress)
-    def meter = new QuoteTraffic(trashSocket.localPort, new File(evidence, 'wire-' + phase))
+    def meter = new QuoteTraffic(trashSocket.localPort, new File(evidence, 'wire-' + phase),
+        phase == 'chart-inspect' ? QuoteTraffic.chartHosts + QuoteTraffic.hosts :
+            phase.startsWith('charts') ? QuoteTraffic.chartHosts : QuoteTraffic.hosts)
     trashSocket.close()
     def proxyToken
     try {
@@ -430,12 +836,127 @@ Thread.startDaemon('LeekBox real Rider acceptance') {
             note.ok = true
             return
         }
-        if (!(phase in ['appearance', 'watch-order', 'order-restart'])) proxyToken = JdkProxyCustomizer.getInstance().customizeProxySelector(meter)
+        if (!(phase in ['appearance', 'watch-order', 'order-restart', 'chart-controls', 'group-toggle'])) proxyToken = JdkProxyCustomizer.getInstance().customizeProxySelector(meter)
         def service = app.getService(descriptor.pluginClassLoader.loadClass('leek.LeekService'))
         def pane = panel(project)
         awaitValue('installed native status widget') { edt { widget(project)?.presentation } }
         def codes = ['sh600000','hk00700','000001','161725','nf_IF0','nf_RB0','nf_RB2701','hf_OIL','hf_CHA50CFD']
-        if (phase == 'fund-legacy') {
+        if (phase == 'group-toggle') {
+            if (!grab(service).containsKey('nf_LC2705')) addCode(pane, 'nf_LC2705')
+            check('groupClicks', inspectGroupClicks(pane, evidence))
+        } else if (phase == 'chart-controls') {
+            for (code in ['nf_RB0', 'nf_LC2705']) {
+                if (!grab(service).containsKey(code)) addCode(pane, code)
+            }
+            check('controls', inspectChartControls(pane, evidence))
+        } else if (phase == 'chart-inspect') {
+            def toggle = edt { child(pane, 'leek.chartToggle') }
+            assert toggle instanceof JToggleButton : 'The watchlist needs a persistent K-line toggle'
+            for (code in ['nf_RB0', 'nf_AO2702']) {
+                if (!grab(service).containsKey(code)) addCode(pane, code)
+                // Keep ordinary polling out of this short observation in any local trading session.
+                def minute = java.time.ZonedDateTime.now(ZoneId.of('Asia/Shanghai')).hour
+                assert service.setRefreshHours(code, minute == 3 ? '04:01-04:02' : '03:01-03:02')
+            }
+            chartReading(pane, 'nf_AO2702', 'M60')
+            edt {
+                assert toggle.width - toggle.insets.left - toggle.insets.right >= toggle.getFontMetrics(toggle.font).stringWidth(toggle.text)
+            }
+            check('inspection', inspectCandles(pane, evidence))
+            check('polling', inspectChartPolling(project, pane, service, meter, toggle))
+            check('gestures', chartGestures(pane, evidence, 'chart-inspect-pan.png'))
+            for (code in ['sh600000', '000001']) {
+                if (!grab(service).containsKey(code)) addCode(pane, code)
+                def reading = chartReading(pane, code, 'DAY')
+                if (code == 'sh600000') assert reading.tooltip =~ /成交额 [0-9]/
+                else assert reading.tooltip.contains('单位净值 ') && !reading.tooltip.contains('成交量 ')
+                check(code, reading)
+            }
+        } else if (phase == 'charts') {
+            def periods = ['M5','M15','M30','M60','M120','DAY','WEEK']
+            def examples = [nf_AO2702:periods, sh600000:periods, hf_OIL:periods, hk00700:['M120'],
+                sh000001:['DAY'], '588200':['M5'], nf_IF0:['M120'], nf_RB0:['WEEK'], hf_CHA50CFD:['M15'],
+                '000001':['DAY','WEEK'], '000198':['DAY']]
+            if (service.view().maPeriods != [5, 10, 20, 60]) {
+                if (!grab(service).containsKey('nf_AO2702')) addCode(pane, 'nf_AO2702')
+                chartReading(pane, 'nf_AO2702', 'DAY')
+                def previous = maDialog(pane)
+                edt { previous.field.text = '5,10,20,60'; previous.ok.doClick(0) }
+                awaitValue('baseline MA settings for repeat run') { service.view().maPeriods == [5, 10, 20, 60] }
+            }
+            for (entry in examples) {
+                def code = entry.key
+                if (!grab(service).containsKey(code)) addCode(pane, code)
+                def sample = [:]
+                entry.value.each { interval ->
+                    def reading = chartReading(pane, code, interval)
+                    boolean disclosure = code in ['000001', '000198']
+                    assert reading.choices == (disclosure ? 2 : 7)
+                    assert reading.tooltip.contains(disclosure ? (code == '000198' ? '每万份收益' : '单位净值') : '成交量 ')
+                    assert reading.tooltip.contains('MA5 ') && reading.tooltip.contains('MA60 ')
+                    sample[interval] = reading
+                    if (code == 'hf_OIL' && interval == 'DAY') edt { paintComponent(pane, new File(evidence, 'charts-oil-day.png')) }
+                }
+                check(code, sample)
+            }
+            edt {
+                selectCode(pane, 'nf_AO2702'); selectCode(pane, 'hf_OIL'); selectCode(pane, 'sh600000')
+            }
+            chartReading(pane, 'nf_AO2702', 'M120')
+            def editor = maDialog(pane)
+            edt { editor.field.text = '5,0' }
+            awaitValue('invalid MA cannot apply') { edt { !editor.ok.enabled } }
+            edt { editor.field.text = '' }
+            awaitValue('all lines can be removed') { edt { editor.ok.enabled } }
+            edt { editor.ok.doClick(0) }
+            awaitValue('empty MA legend and values') { edt {
+                !child(pane, 'leek.chartPlot').accessibleContext.accessibleDescription.contains('MA')
+            }}
+            editor = maDialog(pane)
+            edt { editor.field.text = '3，8, 34' }
+            awaitValue('three valid periods accepted') { edt { editor.ok.enabled } }
+            edt { editor.ok.doClick(0) }
+            awaitValue('custom MAs painted') { edt {
+                child(pane, 'leek.chartPlot').accessibleContext.accessibleDescription?.contains('MA34 ')
+            }}
+            def custom = chartReading(pane, 'nf_AO2702', 'M120')
+            assert custom.tooltip.contains('MA3 ') && custom.tooltip.contains('MA8 ') && !custom.tooltip.contains('MA5 ')
+            check('custom', custom)
+            edt { paintComponent(pane, new File(evidence, 'charts.png')) }
+            meter.offline.set(true)
+            edt { child(pane, 'leek.refresh').doClick(0) }
+            awaitValue('failed refresh retains chart') { edt {
+                child(pane, 'leek.chartStatus').showing && child(pane, 'leek.chartStatus').text.contains('保留上次图表') &&
+                    child(pane, 'leek.chartPlot').accessibleContext.accessibleDescription == custom.latest
+            }}
+            meter.offline.set(false)
+            edt { child(pane, 'leek.refresh').doClick(0) }
+            check('recovered', chartReading(pane, 'nf_AO2702', 'M120'))
+            check('gestures', chartGestures(pane, evidence))
+            edt {
+                def tree = child(pane, 'leek.watchlist')
+                tree.selectionPath = watchPath(tree, 'DOMESTIC')
+                assert !child(pane, 'leek.chart').showing
+            }
+        } else if (phase == 'charts-restart') {
+            def restored = chartReading(pane, 'nf_AO2702', 'M120')
+            assert restored.latest.contains('MA3 ') && restored.latest.contains('MA8 ') && restored.latest.contains('MA34 ')
+            assert !restored.latest.contains('MA5 ')
+            check('restored', restored)
+            meter.blockedHosts.add('hq.sinajs.cn')
+            meter.offline.set(true)
+            edt { child(pane, 'leek.refresh').doClick(0) }
+            awaitValue('both chart and spot quote unavailable') { edt {
+                child(pane, 'leek.chartStatus').text.contains('保留上次图表') && grab(service)['nf_AO2702'].state == 'FAILED'
+            }}
+            def beforeRecovery = meter.requests.size()
+            meter.offline.set(false)
+            awaitValue('visible history retries while spot quotes are still down', 75) { edt {
+                meter.requests.drop(beforeRecovery).any { !it.failedByTest && it.url.contains('symbol=AO2702&type=120') } &&
+                    !child(pane, 'leek.chartStatus').showing && grab(service)['nf_AO2702'].state == 'FAILED'
+            }}
+            check('historyRecoveredWithSpotOffline', true)
+        } else if (phase == 'fund-legacy') {
             if (!grab(service).containsKey('588200')) addCode(pane, '588200')
             if (service.view().pin != '588200') pinCode(pane, '588200')
             edt { child(pane, 'leek.refresh').doClick(0) }

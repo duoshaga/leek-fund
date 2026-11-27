@@ -233,6 +233,7 @@ internal fun downloadQuote(
     charset: Charset,
     connectTimeoutMillis: Int = 5000,
     readTimeoutMillis: Int = 7000,
+    maximumBytes: Int = 512 * 1024,
 ): String {
     val connection = uri.toURL().openConnection() as HttpURLConnection
     try {
@@ -245,9 +246,8 @@ internal fun downloadQuote(
         val status = connection.responseCode
         if (status !in 200..299) throw IOException("${uri.host} returned HTTP $status")
         return connection.inputStream.use { stream ->
-            val maximum = 512 * 1024
-            val bytes = stream.readNBytes(maximum + 1)
-            if (bytes.size > maximum) throw IOException("${uri.host} returned an oversized quote response")
+            val bytes = stream.readNBytes(maximumBytes + 1)
+            if (bytes.size > maximumBytes) throw IOException("${uri.host} returned an oversized quote response")
             String(bytes, charset)
         }
     } finally {
