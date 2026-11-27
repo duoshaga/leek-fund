@@ -16,6 +16,7 @@ object MarketSessions {
     private val newYork = ZoneId.of("America/New_York")
     private val london = ZoneId.of("Europe/London")
     private val quoteInterval = Duration.ofSeconds(25)
+    private val estimateInterval = Duration.ofMinutes(1)
     private val navEveningInterval = Duration.ofHours(1)
     private val navDaytimeInterval = Duration.ofHours(6)
     private val mainlandDates = LocalDate.of(2026, 1, 1)..LocalDate.of(2026, 12, 31)
@@ -54,7 +55,7 @@ object MarketSessions {
     private fun iceTradeDate(eastern: ZonedDateTime) =
         eastern.toLocalDate().plusDays(if (eastern.hour >= 18) 1 else 0)
 
-    /** For funds this is the disclosure-check date. Only the feed can supply the actual NAV date. */
+    /** For unlisted quotes this is the disclosure-check date. The feed supplies the actual valuation date. */
     fun tradingDay(symbol: Symbol, instant: Instant): LocalDate? {
         if (symbol.group == Group.OVERSEAS && symbol.code == "hf_OIL") return brentDay(instant)
         val zone = when {
@@ -66,7 +67,7 @@ object MarketSessions {
         val date = local.toLocalDate()
         val hhmm = local.hour * 100 + local.minute
         return when (symbol.group) {
-            Group.FUND -> date
+            Group.FUND -> if (symbol.etfMarketCode != null) mainlandStockDay(symbol.etfMarketCode, date, hhmm) else date
             Group.STOCK -> when {
                 symbol.code.startsWith("hk") -> hkDay(date, hhmm)
                 mainlandCode(symbol.code) -> mainlandStockDay(symbol.code, date, hhmm)
@@ -87,7 +88,7 @@ object MarketSessions {
         val local = instant.atZone(shanghai)
         val date = local.toLocalDate()
         return when (symbol.group) {
-            Group.FUND -> null
+            Group.FUND -> if (symbol.etfMarketCode != null) checkDate(date, mainlandDates, "内地") else null
             Group.STOCK -> when {
                 symbol.code.startsWith("hk") -> checkDate(instant.atZone(hongKong).toLocalDate(), hkDates, "港股")
                 mainlandCode(symbol.code) -> checkDate(date, mainlandDates, "内地")
@@ -114,7 +115,15 @@ object MarketSessions {
 
     fun interval(symbol: Symbol, instant: Instant): Duration? {
         if (symbol.group == Group.FUND) {
-            return if (instant.atZone(shanghai).hour >= 18) navEveningInterval else navDaytimeInterval
+            val local = instant.atZone(shanghai)
+            val hhmm = local.hour * 100 + local.minute
+            val openDay = mainlandDay(local.toLocalDate())
+            if (symbol.etfMarketCode == null) {
+                if (openDay && mainlandCashHours(hhmm)) return estimateInterval
+                return if (local.hour >= 18) navEveningInterval else navDaytimeInterval
+            }
+            // Allow the final exchange print to reach the feed at each session close.
+            if (openDay && (hhmm == 1130 || hhmm == 1500)) return quoteInterval
         }
         return tradingDay(symbol, instant)?.let { quoteInterval }
     }

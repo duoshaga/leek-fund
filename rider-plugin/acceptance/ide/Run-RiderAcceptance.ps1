@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('live','restart','monthly','close','fuzzy','index-search','appearance','watch-order','order-restart','update-source','refresh-hours','hours-restart','hours-legacy','hours-discovery','hours-cache')][string]$Phase = 'live',
+    [ValidateSet('live','restart','monthly','close','fuzzy','index-search','appearance','watch-order','order-restart','update-source','refresh-hours','hours-restart','hours-legacy','hours-discovery','hours-cache','fund-legacy','fund-quotes')][string]$Phase = 'live',
     [switch]$Install,
     [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '1.0.1',
     [ValidatePattern('^rider-263-[A-Za-z0-9-]+$')][string]$ProfileName = ('rider-263-release-' + $Version.Replace('.', ''))
@@ -14,6 +14,10 @@ if ($product.productCode -ne 'RD' -or $product.buildNumber -ne '263.7307.355') {
 $profileRoot = Join-Path $env:LOCALAPPDATA "LeekBox/$ProfileName"
 $evidence = Join-Path $modulePath 'build/acceptance'
 $config = Join-Path $profileRoot 'config'
+$pluginRoot = Join-Path $profileRoot 'plugins'
+# Rider's installPlugins skips an installed ID. The fund upgrade reuses the real
+# saved watchlist in config while each version loads its own distribution.
+if ($Phase -in 'fund-legacy','fund-quotes') { $pluginRoot = Join-Path $pluginRoot $Version }
 $archive = Get-Item -LiteralPath "$modulePath/dist/leekbox-rider-$Version.zip"
 $marker = Join-Path $profileRoot 'leekbox-acceptance-profile'
 if ((Test-Path $profileRoot) -and !(Test-Path $marker)) { throw "Directory already exists outside this acceptance run: $profileRoot" }
@@ -24,11 +28,11 @@ if (Test-Path $lock) {
         throw "The isolated profile is still open in process $owner"
     }
 }
-New-Item -ItemType Directory -Force -Path "$config/options","$config/extensions/com.intellij/startup","$profileRoot/plugins","$profileRoot/system","$profileRoot/log",$evidence | Out-Null
+New-Item -ItemType Directory -Force -Path "$config/options","$config/extensions/com.intellij/startup",$pluginRoot,"$profileRoot/system","$profileRoot/log",$evidence | Out-Null
 $repo | Set-Content -LiteralPath $marker -Encoding utf8NoBOM
 $properties = @(
     "idea.config.path=$config", "idea.system.path=$profileRoot/system",
-    "idea.log.path=$profileRoot/log", "idea.plugins.path=$profileRoot/plugins",
+    "idea.log.path=$profileRoot/log", "idea.plugins.path=$pluginRoot",
     "leek.qa.repo=$repo", "leek.qa.profile=$profileRoot", "leek.qa.version=$Version"
 ) -replace '\\','/'
 $properties | Set-Content -LiteralPath "$profileRoot/idea.properties" -Encoding utf8NoBOM
@@ -64,7 +68,7 @@ try {
         $stream = $jars[0].Open()
         try { $expectedJar = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stream)) }
         finally { $stream.Dispose() }
-        $installedJar = Join-Path "$profileRoot/plugins" $jars[0].FullName
+        $installedJar = Join-Path $pluginRoot $jars[0].FullName
         if ((Get-FileHash -LiteralPath $installedJar -Algorithm SHA256).Hash -ne $expectedJar) {
             throw 'The installed JAR differs from the requested ZIP'
         }

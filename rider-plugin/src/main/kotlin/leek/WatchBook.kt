@@ -150,7 +150,9 @@ internal class WatchBook(private val interval: (WatchRow, Instant) -> Duration?)
         entry.row = result.fold(
             onSuccess = { quote ->
                 val state = if (quote == null) QuoteState.EMPTY else QuoteState.CURRENT
-                entry.row.copy(quote = quote, state = state, received = now)
+                if (quote != null && quote.isOlderFundValueThan(entry.row.quote)) {
+                    entry.row.copy(state = QuoteState.CACHED)
+                } else entry.row.copy(quote = quote, state = state, received = now)
             },
             onFailure = { entry.row.copy(state = QuoteState.FAILED) }
         )
@@ -178,7 +180,13 @@ internal class WatchBook(private val interval: (WatchRow, Instant) -> Duration?)
         groupOrder.addAll((saved.groupOrder.mapNotNull(known::get) + WatchGroup.entries).distinct())
         for (item in saved.items) {
             val row = item.toRow() ?: continue
-            entries.putIfAbsent(row.symbol.code, Entry(row))
+            val existing = entries[row.symbol.code]
+            if (existing == null || (existing.row.quote == null && row.quote != null)) {
+                entries[row.symbol.code] = Entry(row).apply {
+                    // Pick up a closing trade even if Rider reopens during lunch or after hours.
+                    requested = row.symbol.group == Group.FUND
+                }
+            }
             row.symbol.domesticProduct?.let { schedules.getOrPut(it, ::ProductSchedule) }
         }
         for (item in saved.marketSchedules) {
@@ -189,13 +197,22 @@ internal class WatchBook(private val interval: (WatchRow, Instant) -> Duration?)
             schedule.fetchedAt = at
             schedule.lastAttempt = at
         }
-        pin = saved.pinnedCode?.takeIf { it in entries }
+        pin = saved.pinnedCode?.let { Symbol.parse(it)?.code }?.takeIf { it in entries }
     }
 
     private companion object {
         val HOURS_RETRY = Duration.ofMinutes(5)
         val HOURS_TTL = Duration.ofDays(1)
     }
+}
+
+private fun Quote.isOlderFundValueThan(previous: Quote?): Boolean {
+    if (kind == QuoteKind.MARKET || previous == null || previous.kind == QuoteKind.MARKET) return false
+    val date = sourceTime.substringBefore(' ')
+    val previousDate = previous.sourceTime.substringBefore(' ')
+    if (date != previousDate) return date < previousDate
+    if (kind != previous.kind) return kind == QuoteKind.ESTIMATE
+    return sourceTime < previous.sourceTime
 }
 
 private fun <T> MutableList<T>.moveRelativeTo(item: T, anchor: T, after: Boolean): Boolean {
@@ -235,6 +252,7 @@ class SavedItem {
     var basis: String? = null
     var trade: String? = null
     var bid = false
+    var quoteKind: QuoteKind? = null
     var receivedAt: String? = null
     var dayOpen: String? = null
     var dayHigh: String? = null
@@ -244,21 +262,24 @@ class SavedItem {
 
     fun toRow(): WatchRow? {
         val symbol = Symbol.parse(code) ?: return null
-        val quote = name?.let {
+        // Before 1.0.7 bare fund codes cached NAV, while qualified codes cached exchange prices.
+        val kind = quoteKind ?: if (symbol.group == Group.FUND && code == symbol.code) QuoteKind.NAV else QuoteKind.MARKET
+        val obsoleteNav = symbol.etfMarketCode != null && kind == QuoteKind.NAV
+        val quote = name?.takeUnless { obsoleteNav }?.let {
             val day = if (listOf(dayOpen, dayHigh, dayLow, volume, turnover).all { value -> value == null }) null
                 else DayStats(dayOpen?.toBigDecimalOrNull(), dayHigh?.toBigDecimalOrNull(), dayLow?.toBigDecimalOrNull(),
                     volume?.toBigDecimalOrNull(), turnover?.toBigDecimalOrNull())
             Quote(symbol.code, it, price?.toBigDecimalOrNull(), percent?.toBigDecimalOrNull(),
-                time, basisLabel, basis?.toBigDecimalOrNull(), trade?.toBigDecimalOrNull(), bid, day)
+                time, basisLabel, basis?.toBigDecimalOrNull(), trade?.toBigDecimalOrNull(), bid, day, kind)
         }
-        val received = receivedAt?.let { runCatching { Instant.parse(it) }.getOrNull() }
+        val received = receivedAt?.takeUnless { obsoleteNav }?.let { runCatching { Instant.parse(it) }.getOrNull() }
         val state = when {
             quote != null -> QuoteState.CACHED
             received != null -> QuoteState.EMPTY
             else -> QuoteState.NEW
         }
         val hours = if (symbol.group == Group.DOMESTIC) refreshHours?.let(DomesticRefreshHours::parse) else null
-        return WatchRow(symbol, quote, state, received, displayName, hours)
+        return WatchRow(symbol, quote, state, received, displayName ?: name, hours)
     }
 
     companion object {
@@ -276,6 +297,7 @@ class SavedItem {
                 basis = it.basis?.toPlainString()
                 trade = it.rawTrade?.toPlainString()
                 bid = it.bidFallback
+                quoteKind = it.kind
                 dayOpen = it.day?.open?.toPlainString()
                 dayHigh = it.day?.high?.toPlainString()
                 dayLow = it.day?.low?.toPlainString()

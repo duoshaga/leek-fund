@@ -94,7 +94,7 @@ internal class SymbolPicker(private val choose: (Symbol, String?) -> Unit) {
             return
         }
         val exact = Symbol.parse(query)
-        if (exact != null && exact.group != Group.FUND) {
+        if (exact != null && (exact.group != Group.FUND || query.equals(exact.etfMarketCode, ignoreCase = true))) {
             choose(exact, null)
             return
         }

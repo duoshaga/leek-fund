@@ -104,6 +104,7 @@ class SymbolSearch internal constructor(private val request: (URI, String) -> St
             if (keyword.all(Char::isDigit) && !code.contains(keyword)) return@mapNotNull null
 
             val symbol = when {
+                kind == "ETF" && exchange in setOf("sh", "sz") -> Symbol.parse(exchange + code)
                 exchange == "jj" && (kind.startsWith("KJ") || kind == "LOF" || kind == "ETF") -> Symbol.parse(code)?.takeIf { it.group == Group.FUND }
                 exchange in STOCK_MARKETS && (kind == "ZS" || kind == "GP" || kind == "GP-A" || kind.startsWith("GP-A-")) ->
                     Symbol.parse(exchange + code)

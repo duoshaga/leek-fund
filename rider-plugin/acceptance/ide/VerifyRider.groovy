@@ -362,7 +362,7 @@ def profile = Path.of(PathManager.configPath).toAbsolutePath().parent
 assert profile == Path.of(System.getProperty('leek.qa.profile')).toAbsolutePath().normalize()
 assert !app.headlessEnvironment
 def phase = profile.resolve('phase.txt').toFile().getText('UTF-8').trim()
-assert phase in ['live', 'restart', 'monthly', 'close', 'fuzzy', 'index-search', 'appearance', 'watch-order', 'order-restart', 'update-source', 'refresh-hours', 'hours-restart', 'hours-legacy', 'hours-discovery', 'hours-cache']
+assert phase in ['live', 'restart', 'monthly', 'close', 'fuzzy', 'index-search', 'appearance', 'watch-order', 'order-restart', 'update-source', 'refresh-hours', 'hours-restart', 'hours-legacy', 'hours-discovery', 'hours-cache', 'fund-legacy', 'fund-quotes']
 def evidence = repo.resolve('rider-plugin/build/acceptance').toFile()
 def json = new GsonBuilder().setPrettyPrinting().serializeNulls().create()
 
@@ -435,7 +435,65 @@ Thread.startDaemon('LeekBox real Rider acceptance') {
         def pane = panel(project)
         awaitValue('installed native status widget') { edt { widget(project)?.presentation } }
         def codes = ['sh600000','hk00700','000001','161725','nf_IF0','nf_RB0','nf_RB2701','hf_OIL','hf_CHA50CFD']
-        if (phase == 'hours-legacy') {
+        if (phase == 'fund-legacy') {
+            if (!grab(service).containsKey('588200')) addCode(pane, '588200')
+            if (service.view().pin != '588200') pinCode(pane, '588200')
+            edt { child(pane, 'leek.refresh').doClick(0) }
+            def oldRow = awaitValue('published NAV on the old ETF watch') { edt {
+                def row = rowTexts(pane)['588200']
+                def quote = grab(service)['588200']
+                if (quote?.state == 'CURRENT' && quote.basisLabel == '披露日涨跌幅' && row?.contains('净值 ' + quote.price) &&
+                    widget(project).presentation.text.startsWith('588200')) return row
+                return null
+            }}
+            check('originalFundRow', oldRow)
+        } else if (phase == 'fund-quotes') {
+            check('existingWatch', [codes: grab(service).keySet().toList(), pinned: service.view().pin])
+            def funds = ['588200','159915','000001','007300','000198']
+            def labels = ['现价','现价','估值','估值','每万份收益']
+            def timeLabels = ['报价时间','报价时间','估值时间','估值时间','收益日期']
+            assert lookup(pane, 'sh588200', '588200') == ['588200']
+            for (code in funds) {
+                if (!grab(service).containsKey(code)) addCode(pane, code)
+            }
+            def ready = awaitValue('five live fund quotes', 90) {
+                def values = grab(service)
+                funds.every { values[it]?.state == 'CURRENT' && values[it].price && values[it].time } ? values : null
+            }
+            edt { child(pane, 'leek.refresh').doClick(0) }
+            def initial = awaitValue('fund quotes observed by the wire recorder', 90) {
+                def values = grab(service)
+                funds.every { values[it]?.state == 'CURRENT' && values[it].received > ready[it].received } ? values : null
+            }
+            check('fundQuotes', initial)
+            def shown = [:]
+            funds.eachWithIndex { code, index ->
+                if (service.view().pin != code) pinCode(pane, code)
+                else edt { selectCode(pane, code) }
+                shown[code] = awaitValue(code + ' row, detail and pinned quote') { edt {
+                    def row = rowTexts(pane)[code]
+                    def status = widget(project).presentation
+                    def details = child(pane, 'leek.sourceTime').text
+                    def price = labels[index] + ' ' + grab(service)[code].price
+                    def group = child(pane, 'leek.watchlist').selectionPath?.parentPath?.lastPathComponent?.userObject
+                    if (group?.toString() == 'FUND' && row?.contains(price) && status.text.startsWith(code) &&
+                        status.text.contains(price) && status.tooltipText.contains(timeLabels[index]) && details.contains(timeLabels[index]))
+                        return [row: row, status: status.text, detail: details]
+                    return null
+                }}
+            }
+            check('fundSurfaces', shown)
+            assert shown['159915'].row.contains('ETF') && shown['007300'].row.contains('联接')
+            if (service.view().pin != '588200') pinCode(pane, '588200')
+            edt { selectCode(pane, '588200'); paintComponent(pane, new File(evidence, 'fund-quotes.png')) }
+            def subsequent = awaitValue('automatic ETF tick and fund estimate poll', 110) {
+                def values = grab(service)
+                if (values['588200'].time > initial['588200'].time &&
+                    funds.every { values[it].state == 'CURRENT' && values[it].received > initial[it].received }) return values
+                return null
+            }
+            check('fundRefresh', subsequent)
+        } else if (phase == 'hours-legacy') {
             if (!grab(service).containsKey('nf_LC2705')) addCode(pane, 'nf_LC2705')
             awaitValue('old lithium quote') { grab(service)['nf_LC2705']?.state == 'CURRENT' }
             def text = edt { rowTexts(pane)['nf_LC2705'] }

@@ -282,15 +282,12 @@ private class WatchPanel(private val service: LeekService) : JPanel(BorderLayout
                 price.foreground = foreground
                 price.font = font
                 fit(price, 44)
-                title.text = entry.quote?.name?.takeUnless { it == item.code } ?: entry.displayName.orEmpty()
+                title.text = QuoteText.name(entry).orEmpty()
                 title.foreground = foreground
                 title.font = font
                 title.icon = if (item.code == pinnedCode) AllIcons.General.Pin else null
                 tail.foreground = if (selected) foreground else JBColor.GRAY
-                val sourceTime = entry.quote?.sourceTime?.takeIf { it.isNotBlank() }?.let {
-                    if (item.group == Group.FUND) it else it.substringAfterLast(' ')
-                }
-                tail.text = listOfNotNull(item.code, sourceTime,
+                tail.text = listOfNotNull(item.code, QuoteText.rowTime(entry),
                     QuoteText.availability(entry), QuoteText.refreshNote(entry, compact = true))
                     .joinToString("  ·  ")
                 line.accessibleContext.accessibleName = listOf(percent.text, price.text, title.text, tail.text).joinToString("  ")

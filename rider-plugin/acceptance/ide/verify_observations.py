@@ -9,9 +9,12 @@ from urllib.parse import parse_qs, urlparse
 
 
 def expected(code, fields):
+    if code.startswith("fu_"):
+        return dict(price=fields[2], percent=fields[6] or None, time=f"{fields[7]} {fields[1]}",
+                    basis=fields[3] or None, rawTrade=None, bid=False)
     if code == "hk00700":
         trade, basis, stamp = fields[3], fields[4], fields[30]
-    elif code == "sh600000":
+    elif code in ("sh600000", "sh588200", "sz159915"):
         trade, basis, stamp = fields[3], fields[2], fields[30] + " " + fields[31]
     elif code == "nf_IF0":
         trade, basis, stamp = fields[3], fields[13], fields[36] + " " + fields[37]
@@ -48,6 +51,8 @@ def observations(note, folder):
                 if data:
                     value = expected(code, data.split(","))
                     if value:
+                        if code.startswith("fu_") or code in ("sh588200", "sz159915"):
+                            code = code[-6:]
                         rows.append((code, value, item))
         elif url.hostname == "qt.gtimg.cn":
             data = json.loads(study.read_text(encoding="gb18030")).get("r_hk00700")
@@ -55,10 +60,11 @@ def observations(note, folder):
                 rows.append(("hk00700", expected("hk00700", data), item))
         elif url.hostname == "api.fund.eastmoney.com":
             code = parse_qs(url.query)["fundCode"][0]
-            data = json.loads(study.read_text(encoding="utf-8"))["Data"]["LSJZList"]
-            if data:
-                record = data[0]
-                value = dict(price=record["DWJZ"], percent=record["JZZZL"], time=record["FSRQ"],
+            data = json.loads(study.read_text(encoding="utf-8"))["Data"]
+            if data["LSJZList"]:
+                record = data["LSJZList"][0]
+                percent = None if data.get("SYType") == "每万份收益" else record["JZZZL"] or None
+                value = dict(price=record["DWJZ"], percent=percent, time=record["FSRQ"],
                              rawTrade=None, basis=None, bid=False)
                 rows.append((code, value, item))
     return rows
@@ -89,6 +95,11 @@ def verify(file):
     checks = note["checks"]
     records = observations(note, file.parent)
     output = {}
+    if "fundQuotes" in checks:
+        output["funds"] = {}
+        for code, quote in checks["fundQuotes"].items():
+            output["funds"][code] = compare(code, quote, records) or compare(code, checks["fundRefresh"][code], records)
+        assert len(output["funds"]) == 5 and all(output["funds"].values()), output["funds"]
     if "nine" in checks:
         output["nine"] = {code: compare(code, row, records) for code, row in checks["nine"]["model"].items()}
     if "bid" in checks:

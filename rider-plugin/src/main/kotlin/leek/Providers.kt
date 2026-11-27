@@ -8,6 +8,10 @@ import java.math.RoundingMode
 import java.net.HttpURLConnection
 import java.net.URI
 import java.nio.charset.Charset
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
@@ -19,12 +23,33 @@ class MarketQuoteSource internal constructor(
     private val fundNames = ConcurrentHashMap<String, String>()
 
     override fun fetch(symbols: List<Symbol>): Map<String, Result<Quote?>> {
-        val (funds, markets) = symbols.distinctBy(Symbol::code).partition { it.group == Group.FUND }
-        val (hongKong, sina) = markets.partition { it.code.startsWith("hk") }
+        val (hongKong, sina) = symbols.distinctBy(Symbol::code).partition { it.code.startsWith("hk") }
         val batches =
             sina.chunked(50).map { batch -> { fromSina(batch) } } +
-                hongKong.chunked(50).map { batch -> { fromTencent(batch) } } +
-                funds.map { fund -> { mapOf(fund.code to runCatching { fromEastmoney(fund) }) } }
+                hongKong.chunked(50).map { batch -> { fromTencent(batch) } }
+        val quotes = fetchBatches(batches)
+        val now = ZonedDateTime.now(ZoneId.of("Asia/Shanghai"))
+        val today = now.toLocalDate().toString()
+        val disclosures = sina.mapNotNull { symbol ->
+            if (symbol.group != Group.FUND || symbol.etfMarketCode != null) return@mapNotNull null
+            val result = quotes.getValue(symbol.code)
+            // A transport or protocol failure must leave the last good quote eligible for retention.
+            if (result.isFailure) return@mapNotNull null
+            val estimate = result.getOrNull()
+            val estimateDate = estimate?.sourceTime?.substringBefore(' ')
+            if (estimateDate == today && now.hour < 18) return@mapNotNull null
+            {
+                val published = runCatching { fromEastmoney(symbol) }
+                val latest = if (estimate != null && published.getOrNull()?.sourceTime.orEmpty() < estimateDate.orEmpty()) {
+                    Result.success(estimate)
+                } else published
+                mapOf(symbol.code to latest)
+            }
+        }
+        return quotes + fetchBatches(disclosures)
+    }
+
+    private fun fetchBatches(batches: List<() -> Map<String, Result<Quote?>>>): Map<String, Result<Quote?>> {
         if (batches.isEmpty()) return emptyMap()
 
         val executor = Executors.newFixedThreadPool(minOf(4, batches.size))
@@ -38,27 +63,24 @@ class MarketQuoteSource internal constructor(
         }
     }
 
+    private fun sinaCode(symbol: Symbol) = if (symbol.group == Group.FUND) {
+        symbol.etfMarketCode ?: "fu_${symbol.code}"
+    } else symbol.code
+
     private fun fromSina(symbols: List<Symbol>): Map<String, Result<Quote?>> = parseBatch(symbols, {
-        val codes = symbols.joinToString(",") { it.code }
+        val codes = symbols.joinToString(",", transform = ::sinaCode)
         val body = request(URI.create("https://hq.sinajs.cn/list=$codes"), "https://finance.sina.com.cn/", GB18030)
         val rows = SINA_ROW.findAll(body).associate { it.groupValues[1] to it.groupValues[2] }
         require(rows.isNotEmpty()) { "Unexpected Sina quote response" }
         rows
     }) { symbol, rows ->
-        val row = requireNotNull(rows[symbol.code]) { "Sina omitted ${symbol.code}" }
+        val row = requireNotNull(rows[sinaCode(symbol)]) { "Sina omitted ${sinaCode(symbol)}" }
         if (row.isBlank()) null else parseSinaQuote(symbol, row.split(','))
     }
 
-    private fun parseSinaQuote(symbol: Symbol, fields: List<String>): Quote = when (symbol.group) {
-        Group.STOCK -> {
-            require(fields.size >= 32) { "Incomplete Sina stock quote for ${symbol.code}" }
-            val trade = decimal(fields[3])
-            val basis = decimal(fields[2])
-            val bid = decimal(fields[6])
-            val price = trade ?: bid
-            marketQuote(symbol, fields[0], price, sourceTime(fields[30], fields[31]), "昨收", basis, trade,
-                trade == null && bid != null, dayStats(fields[1], fields[4], fields[5], fields[8], fields[9]))
-        }
+    private fun parseSinaQuote(symbol: Symbol, fields: List<String>): Quote? = when (symbol.group) {
+        Group.STOCK -> cashMarketQuote(symbol, fields)
+        Group.FUND -> if (symbol.etfMarketCode != null) cashMarketQuote(symbol, fields) else fundEstimate(symbol, fields)
         Group.DOMESTIC -> {
             val product = symbol.code.substring(3).takeWhile(Char::isLetter)
             if (product in INDEX_AND_BOND_FUTURES) {
@@ -82,7 +104,26 @@ class MarketQuoteSource internal constructor(
             marketQuote(symbol, fields[13], if (useBid) bid else trade, sourceTime(fields[12], fields[6]), "昨结算价",
                 decimal(fields[7]), trade, useBid, dayStats(fields[8], fields[4], fields[5], fields.getOrNull(14)))
         }
-        Group.FUND -> error("Unexpected Sina fund quote for ${symbol.code}")
+    }
+
+    private fun cashMarketQuote(symbol: Symbol, fields: List<String>): Quote {
+        require(fields.size >= 32) { "Incomplete Sina exchange quote for ${symbol.code}" }
+        val trade = decimal(fields[3])
+        val bid = decimal(fields[6])
+        return marketQuote(symbol, fields[0], trade ?: bid, sourceTime(fields[30], fields[31]), "昨收",
+            decimal(fields[2]), trade, trade == null && bid != null, dayStats(fields[1], fields[4], fields[5], fields[8], fields[9]))
+    }
+
+    private fun fundEstimate(symbol: Symbol, fields: List<String>): Quote? {
+        require(fields.size >= 8) { "Incomplete Sina fund estimate for ${symbol.code}" }
+        val price = decimal(fields[2])?.takeIf { it.signum() > 0 } ?: return null
+        val date = fields[7].trim()
+        val time = fields[1].trim()
+        if (date.isEmpty() || time.isEmpty()) return null
+        LocalDate.parse(date)
+        LocalTime.parse(time)
+        return Quote(symbol.code, fields[0].ifBlank { symbol.code }, price, fields[6].trim().toBigDecimalOrNull(),
+            sourceTime(date, time), "上次公布净值", decimal(fields[3]), null, false, kind = QuoteKind.ESTIMATE)
     }
 
     private fun fromTencent(symbols: List<Symbol>): Map<String, Result<Quote?>> = parseBatch(symbols, {
@@ -107,16 +148,25 @@ class MarketQuoteSource internal constructor(
         val url = URI.create("https://api.fund.eastmoney.com/f10/lsjz?fundCode=$code&pageIndex=1&pageSize=1")
         val data = responseObject(request(url, "https://fundf10.eastmoney.com/jjjz_$code.html", Charsets.UTF_8))
         require(data.get("ErrCode")?.asInt == 0) { "Eastmoney NAV request failed for $code" }
-        val rows = requireNotNull(data.getAsJsonObject("Data")?.getAsJsonArray("LSJZList")) {
+        val info = data.getAsJsonObject("Data")
+        val rows = requireNotNull(info?.getAsJsonArray("LSJZList")) {
             "Unexpected Eastmoney NAV response for $code"
         }
         if (rows.isEmpty) return null
         val row = rows[0].asJsonObject
         val date = requireNotNull(row.text("FSRQ")?.takeIf(String::isNotBlank)) { "Eastmoney NAV missing date for $code" }
-        val nav = decimal(row.text("DWJZ"))
+        val kind = when (info.text("SYType")) {
+            null, "" -> QuoteKind.NAV
+            "每万份收益" -> QuoteKind.INCOME
+            else -> return null
+        }
+        val nav = if (kind == QuoteKind.INCOME) row.text("DWJZ")?.toBigDecimalOrNull() else decimal(row.text("DWJZ"))
+        if (nav == null) return null
         val percent = row.text("JZZZL")?.trim()?.removeSuffix("%")?.toBigDecimalOrNull()
         val name = fundNames[code] ?: runCatching { fundName(code) }.getOrNull()?.also { fundNames[code] = it }
-        return Quote(code, name ?: code, nav, percent, date, "披露日涨跌幅", null, null, false)
+        val hasNav = kind == QuoteKind.NAV
+        return Quote(code, name ?: code, nav, percent.takeIf { hasNav }, date, if (hasNav) "披露日涨跌幅" else "",
+            null, null, false, kind = kind)
     }
 
     private fun fundName(code: String): String? {

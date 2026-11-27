@@ -3,9 +3,12 @@ package leek
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 internal object QuoteText {
     private const val DASH = "—"
+    private val chinaZone = ZoneId.of("Asia/Shanghai")
 
     fun percentage(number: BigDecimal?): String {
         val value = number?.setScale(2, RoundingMode.HALF_UP) ?: return DASH
@@ -27,19 +30,30 @@ internal object QuoteText {
     fun price(row: WatchRow): String {
         val quote = row.quote
         val price = if (row.symbol.group == Group.FUND) quote?.price?.toPlainString() ?: DASH else short(quote?.price)
-        val kind = when {
-            row.symbol.group == Group.FUND -> "净值 "
-            quote?.bidFallback == true -> "买一 "
-            else -> ""
+        val label = when {
+            quote?.bidFallback == true -> "买一"
+            row.symbol.etfMarketCode != null -> "现价"
+            else -> quote?.kind?.priceLabel.orEmpty()
         }
-        return kind + price
+        return if (label.isEmpty()) price else "$label $price"
     }
 
     fun market(row: WatchRow) = price(row) + "   " + percentage(row.quote?.percent)
 
+    fun name(row: WatchRow): String? {
+        if (row.symbol.group == Group.FUND && !row.displayName.isNullOrBlank()) return row.displayName
+        return row.quote?.name?.takeUnless { it.isBlank() || it == row.symbol.code } ?: row.displayName
+    }
+
     fun timestamp(row: WatchRow): String {
-        val label = if (row.symbol.group == Group.FUND) "净值日期" else "报价时间"
+        val label = row.quote?.kind?.timeLabel ?: "报价时间"
         return "$label  " + row.quote?.sourceTime.orEmpty().ifBlank { DASH }
+    }
+
+    fun rowTime(row: WatchRow): String? {
+        val time = row.quote?.sourceTime?.takeIf(String::isNotBlank) ?: return null
+        if (row.symbol.group == Group.FUND && time.substringBefore(' ') != LocalDate.now(chinaZone).toString()) return time
+        return time.substringAfterLast(' ')
     }
 
     fun availability(row: WatchRow): String? = when (row.state) {
@@ -67,10 +81,15 @@ internal object QuoteText {
     }
 
     fun detail(row: WatchRow): String = buildList {
-        val name = row.quote?.name?.takeUnless { it.isBlank() || it == row.symbol.code } ?: row.displayName
-        add(listOfNotNull(name, row.symbol.code).joinToString("  "))
-        add(if (row.symbol.group == Group.FUND) "已公布单位净值  " + market(row).removePrefix("净值 ") else market(row))
+        add(listOfNotNull(name(row), row.symbol.code).joinToString("  "))
+        add(market(row))
         add(timestamp(row))
+        when (row.quote?.kind) {
+            QuoteKind.ESTIMATE -> add("估值来源  新浪基金")
+            QuoteKind.NAV -> add("暂无估值更新，显示已公布单位净值")
+            QuoteKind.INCOME -> add("已公布的每万份收益")
+            else -> Unit
+        }
         if (row.symbol.code == "hf_OIL" || row.symbol.code == "hf_CHA50CFD") add("行情源  新浪 CFD 指示报价")
         row.quote?.let {
             if (it.price != null && it.basis != null) {
@@ -80,7 +99,7 @@ internal object QuoteText {
             it.day?.let { day ->
                 add("最高  " + short(day.high) + "     最低  " + short(day.low))
                 add("今开  " + short(day.open))
-                val unit = when (row.symbol.group) { Group.STOCK -> "股"; Group.DOMESTIC -> "手"; else -> "" }
+                val unit = when (row.symbol.group) { Group.STOCK -> "股"; Group.FUND -> "份"; Group.DOMESTIC -> "手"; else -> "" }
                 val amountUnit = if (row.symbol.code.startsWith("hk")) "（报价币种）" else "元"
                 val volumeLabel = if (row.symbol.group == Group.OVERSEAS) "源成交量  " else "成交量  "
                 add(volumeLabel + quantity(day.volume) + (if (day.volume != null) unit else "") +

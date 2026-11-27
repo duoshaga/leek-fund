@@ -117,6 +117,7 @@ class ProviderTest {
     fun `keep published unit NAV and only the provider supplied percentage`() {
         val source = MarketQuoteSource { uri, _, _ ->
             when {
+                uri.host == "hq.sinajs.cn" -> """var hq_str_fu_000001="";var hq_str_fu_161725="";"""
                 uri.host == "fundsuggest.eastmoney.com" -> """{"ErrCode":0,"Datas":[{"CODE":"000001","NAME":"平安银行","FundBaseInfo":null},{"CODE":"000001","NAME":"华夏成长混合","FundBaseInfo":{"FCODE":"000001"}}]}"""
                 uri.query.startsWith("fundCode=000001&") -> """{"ErrCode":0,"Data":{"LSJZList":[{"FSRQ":"2026-11-25","DWJZ":"0.9110","LJJZ":"3.4840","JZZZL":"-5.89"}]}}"""
                 else -> """{"ErrCode":0,"Data":{"LSJZList":[{"DWJZ":"0.5721","LJJZ":"2.2882","FSRQ":"2026-11-25","JZZZL":""}]}}"""
@@ -140,7 +141,7 @@ class ProviderTest {
     fun `an explicit empty carries no quote and one provider failure leaves other results available`() {
         val source = MarketQuoteSource { uri, _, _ ->
             when (uri.host) {
-                "hq.sinajs.cn" -> """var hq_str_nf_RB9999="";"""
+                "hq.sinajs.cn" -> """var hq_str_nf_RB9999="";var hq_str_fu_999999="";"""
                 "qt.gtimg.cn" -> throw IOException("offline")
                 else -> """{"ErrCode":0,"Data":{"LSJZList":[]},"TotalCount":0}"""
             }

@@ -3,9 +3,9 @@
     <name>LeekBox</name>
     <vendor>LeekBox Rider</vendor>
     <description><![CDATA[
-        Track Chinese and Hong Kong stocks, published fund net asset values, and domestic and overseas futures.
+        Track Chinese and Hong Kong stocks, exchange-traded ETF prices, intraday fund estimates, and domestic and overseas futures.
         Pin one quote to the status bar and share the watchlist across project windows.<br/>
-        在 Rider 原生侧栏管理 A 股、港股、基金公布净值和国内外期货。
+        在 Rider 原生侧栏查看 A 股、港股、场内 ETF 行情、基金盘中估值和国内外期货。
         固定一个合约到状态栏，按交易时段更新行情。
     ]]></description>
     <depends>com.intellij.modules.rider</depends>
